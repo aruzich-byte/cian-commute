@@ -1,0 +1,228 @@
+/* ---------- Панель «Настройка прототипа» (только десктоп, вне телефона) ---------- */
+/* Логика настроек прототипа не завязана на видимость панели — просто нет смысла показывать её на мобильных,
+   где сравнивать варианты негде (телефон занимает весь экран). */
+.prototype-panel {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  bottom: 20px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 340px;
+  flex-shrink: 0;
+  padding: 32px;
+  background: var(--bg-surface);
+  border-radius: 32px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+}
+
+.prototype-panel[hidden] {
+  display: none !important;
+}
+
+/* На мобильном (реальный телефон или узкое окно) панель по умолчанию скрыта
+   за пределами экрана — открывается тройным тапом по экрану, см. main.js.
+   На десктопе .is-open ни на что не влияет: там она видна всегда как сайдбар
+   (базовое правило .prototype-panel выше). */
+@media (max-width: 480px) {
+  .prototype-panel {
+    inset: 0;
+    width: auto;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 250;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+  }
+
+  .prototype-panel.is-open {
+    transform: translateY(0);
+  }
+}
+
+.prototype-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.prototype-panel__title {
+  margin: 0;
+  font-family: "SF Pro Display", var(--font-family);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 30px;
+  letter-spacing: 0.32px;
+  color: var(--text-primary);
+}
+
+/* Крестик закрытия нужен только в мобильной полноэкранной шторке — на
+   десктопе панель открыта всегда, закрывать нечего. */
+.prototype-panel__close {
+  display: none;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: var(--bg-page);
+  border-radius: 50%;
+  color: var(--text-primary);
+}
+
+.prototype-panel__close svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 480px) {
+  .prototype-panel__close {
+    display: flex;
+  }
+}
+
+.prototype-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prototype-panel__section[hidden] {
+  display: none;
+}
+
+.prototype-panel__section-title {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: -0.32px;
+  color: var(--text-primary);
+}
+
+.prototype-panel__section-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Второй заголовок внутри секции — отступ до него
+   такой же, как между секциями (32px = section gap 12px + доп. 20px). */
+.prototype-panel__section-head--spaced {
+  margin-top: 20px;
+}
+
+/* Иконка «i» рядом с заголовком настройки прототипа — подсказка на ховере
+   объясняет, что меняет настройка и зачем она нужна в прототипе (не видна
+   в самом продукте, только в панели слева). */
+.proto-info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.proto-info__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--border-chip);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+}
+
+.proto-info:hover .proto-info__icon,
+.proto-info:focus-visible .proto-info__icon {
+  background: var(--accent);
+  color: var(--color-white);
+}
+
+.proto-info__tooltip {
+  /* position: fixed — тултип не обрезается контейнером с overflow-y: auto
+     (панель прототипа скроллится), а координаты left/top под него
+     вычисляет и подставляет js/proto-info.js с учётом границ вьюпорта. */
+  position: fixed;
+  z-index: 20;
+  width: 280px;
+  padding: 10px 12px;
+  border-radius: var(--radius-m);
+  background: var(--text-primary);
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 17px;
+  letter-spacing: -0.16px;
+  text-align: left;
+  white-space: normal;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s;
+  pointer-events: none;
+}
+
+.proto-info:hover .proto-info__tooltip,
+.proto-info:focus-visible .proto-info__tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.prototype-panel__chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.prototype-panel__chips--wrap {
+  flex-wrap: wrap;
+}
+
+/* .toggle-row по умолчанию (см. filters-modal.css) — space-between: текст
+   слева, свитч справа. Здесь порядок в разметке обратный (свитч перед
+   текстом), поэтому вместо растягивания на всю ширину строки прижимаем
+   оба элемента друг к другу слева. Двойной селектор — иначе одинаковая
+   специфичность с .toggle-row проигрывает: filters-modal.css подключается
+   после dev-switchers.css, и его space-between побеждал бы по порядку каскада. */
+.toggle-row.toggle-row--switch-first {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.proto-chip {
+  height: 32px;
+  padding: 6px 12px;
+  border: 1px solid var(--border-chip);
+  border-radius: var(--radius-m);
+  background: var(--bg-surface);
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: -0.24px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.proto-chip.is-active {
+  border-color: var(--border-focus-strong);
+  background: var(--accent-secondary-bg);
+}

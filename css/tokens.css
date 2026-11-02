@@ -1,0 +1,64 @@
+:root {
+  --bg-page: #f3f5fa;
+  --bg-surface: #ffffff;
+  --border-divider: #eef1f7;
+  --border-soft: rgba(13, 22, 46, 0.08);
+  --border-chip: #d0d8e9;
+
+  --text-primary: #0d162e;
+  --text-secondary: #697797;
+  --text-muted: #9aa4bd;
+
+  --accent: #0468ff;
+  --accent-hover: #0555d6;
+  --accent-secondary-bg: #e6f0ff;
+  --accent-secondary-text: #005ede;
+  --accent-chip-bg: #d9e8ff;
+  --accent-chip-text: #0661ec;
+
+  /* Синяя обводка активного/сфокусированного состояния (инпуты, выбранный чип цены) */
+  --border-focus: #2178fd;
+  /* Обводка выбранного чипа (пресеты, площадь) — на тон ярче --border-focus, отдельный оттенок */
+  --border-focus-strong: #3686ff;
+
+  --positive-bg: #d8f3cc;
+  --positive-text: #229a02;
+
+  --warning-bg: #fff3de;
+  --warning-border: #f4d79a;
+  --warning-text: #b8720a;
+
+  --snackbar-bg: #212c46;
+  --snackbar-text: #ffffff;
+  --snackbar-link: #a8cbff;
+  --snackbar-divider: rgba(255, 255, 255, 0.16);
+
+  /* Лейблы под фото в сниппете */
+  --label-promo-bg: #e1e6f4;
+  --label-promo-text: #0d162e;
+  --label-promo-icon: #212c46;
+  --label-bg: #e4e9f6;
+  --label-text: #152242;
+
+  --color-white: #ffffff;
+  /* Подложка плашек поверх фото в галерее: Fill #000000 40% + Background blur 50 из Figma
+     (Figma-блюр 50 ≈ CSS blur(25px) — у Figma радиус вдвое больше CSS) */
+  --overlay-dark: rgba(0, 0, 0, 0.4);
+  --overlay-blur: blur(25px);
+  /* Цвет корпуса телефона-мокапа (не связан с текстовыми токенами, хоть и совпадает с --text-primary) */
+  --device-chrome: #0d162e;
+
+  --radius-pill: 99px;
+  --radius-l: 12px;
+  --radius-m: 8px;
+  --radius-card: 16px;
+  --radius-avatar: 12px;
+  --radius-s: 4px;
+
+  --shadow-card: 0 1px 2px rgba(13, 22, 46, 0.04), 0 1px 12px rgba(13, 22, 46, 0.04);
+  --shadow-sheet: 0 -8px 32px rgba(13, 22, 46, 0.18);
+
+  --font-family: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --phone-width: 390px;
+}

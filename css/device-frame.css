@@ -1,0 +1,110 @@
+/* ---------- Phone frame (desktop only) ---------- */
+.viewport-stage {
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  padding-left: calc(20px + 340px + 20px);
+}
+
+.phone-frame {
+  position: relative;
+  width: var(--phone-width);
+  height: 844px;
+  background: var(--device-chrome);
+  border-radius: 54px;
+  padding: 14px;
+  box-shadow: 0 30px 60px rgba(13, 22, 46, 0.35), 0 4px 16px rgba(13, 22, 46, 0.2);
+}
+
+.phone-frame__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-page);
+  border-radius: 40px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.phone-frame__island {
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 30px;
+  background: var(--device-chrome);
+  border-radius: 99px;
+  z-index: 200;
+}
+
+/* Edge-to-edge on real phones */
+@media (max-width: 480px) {
+  .viewport-stage {
+    padding: 0;
+    min-height: 100dvh;
+  }
+  .phone-frame {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+  .phone-frame__screen {
+    border-radius: 0;
+  }
+  .phone-frame__island {
+    display: none;
+  }
+}
+
+/* ---------- App shell ---------- */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.statusbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  z-index: 31;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px 0 24px;
+  font-size: 15px;
+  font-weight: 600;
+  background: transparent;
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.6);
+  transition: background 0.2s ease, text-shadow 0.2s ease;
+}
+
+.statusbar.is-solid {
+  background: var(--bg-surface);
+  text-shadow: none;
+}
+
+.statusbar__icons {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+
+/* На реальном телефоне время/сеть/батарею уже показывает системный статус-бар —
+   наш нарисованный дублирует его, поэтому прячем (и поднимаем шапку на его
+   место — см. .header в header.css, подключается позже device-frame.css). */
+@media (max-width: 480px) {
+  .statusbar {
+    display: none;
+  }
+}

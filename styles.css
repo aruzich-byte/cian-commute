@@ -1,0 +1,13 @@
+/* Точка входа: сами правила лежат в css/*.css, разбитые по смыслу (см. design.md
+   в корне репозитория — та же схема через @import, что и в tokens/*.css). */
+@import "css/tokens.css";
+@import "css/base.css";
+@import "css/device-frame.css";
+@import "css/dev-switchers.css";
+@import "css/header.css";
+@import "css/map.css";
+@import "css/card.css";
+@import "css/overlay.css";
+@import "css/filters-modal.css";
+@import "css/price-widget.css";
+@import "css/commute.css";

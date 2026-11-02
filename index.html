@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Транспортная доступность — прототип выдачи</title>
+    <!-- Запуск с экрана «Домой» на iPhone — без адресной строки и панелей Safari -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Аренда" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/app/apple-touch-icon.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Карта грузится параллельно и не блокирует выдачу: если api-maps.yandex.ru
+         тормозит или недоступен (бывает на телефоне), список всё равно показывается -->
+    <script id="ymaps-script" src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" async></script>
+  </head>
+  <!-- Класс hide-avatars скрывает аватарки продавцов в сниппетах — уберите его, чтобы вернуть.
+       Класс no-map убирает карту: выдача сразу списком на весь экран (для UX-теста).
+       Уберите no-map, чтобы вернуть карту с пинами и шторку со списком.
+       Класс no-search прячет шапку (поиск и быстрые фильтры) и кнопку сортировки — уберите, чтобы вернуть. -->
+  <body class="hide-avatars">
+    <div class="viewport-stage">
+      <!-- Панель «Настройка прототипа»: на десктопе слева. В ссылках для теста (?task=…) скрыта, см. prototype-panel.js -->
+      <aside class="prototype-panel" id="prototype-panel">
+        <div class="prototype-panel__header">
+          <h2 class="prototype-panel__title">Настройка прототипа</h2>
+          <button class="prototype-panel__close" id="prototype-panel-close" type="button" aria-label="Закрыть">
+            <svg viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+
+        <div class="prototype-panel__section">
+          <div class="prototype-panel__section-title">Транспортная доступность</div>
+          <div class="prototype-panel__chips" data-proto-param="commute">
+            <button class="proto-chip" type="button" data-value="places">Мои места</button>
+            <button class="proto-chip" type="button" data-value="zone">Поиск по времени</button>
+          </div>
+          <div class="prototype-panel__chips">
+            <button class="proto-chip" type="button" id="proto-commute-sample">Заполнить примером</button>
+            <button class="proto-chip" type="button" id="proto-commute-clear">Очистить места</button>
+          </div>
+        </div>
+        <div class="prototype-panel__section">
+          <div class="prototype-panel__section-title">Тип сделки</div>
+          <div class="prototype-panel__chips" data-proto-param="deal">
+            <button class="proto-chip" type="button" data-value="rent">Снять</button>
+            <button class="proto-chip" type="button" data-value="buy">Купить</button>
+          </div>
+        </div>
+        <div class="prototype-panel__section">
+          <div class="prototype-panel__section-title">Тип недвижимости</div>
+          <div class="prototype-panel__chips" data-proto-param="type">
+            <button class="proto-chip" type="button" data-value="flat">Квартира</button>
+            <button class="proto-chip" type="button" data-value="house">Дом</button>
+          </div>
+        </div>
+      </aside>
+      <div class="phone-frame">
+        <div class="phone-frame__island"></div>
+        <div class="phone-frame__screen">
+          <div class="app">
+            <div class="map-area" id="map-area">
+              <div class="map-bg" id="map-bg">
+                <div id="yandex-map"></div>
+              </div>
+
+              <div class="statusbar" id="statusbar">
+                <span>9:41</span>
+                <div class="statusbar__icons">
+                  <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="4.5" y="5" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="9" y="3" width="3" height="8" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="currentColor"/></svg>
+                  <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M7.5 9.5a1 1 0 100 2 1 1 0 000-2zM4 6.7a5 5 0 017 0M1.3 4a9 9 0 0112.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>
+                  <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="17" height="7" rx="1.3" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.7" fill="currentColor"/></svg>
+                </div>
+              </div>
+
+              <header class="header" id="header">
+                <div class="search-row">
+                  <button class="search-bar" id="search-bar-btn" type="button">
+                    <span class="search-bar__icon">
+                      <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.14648 0.646484C3.55663 0.646484 0.646484 3.55663 0.646484 7.14648C0.646484 10.7363 3.55663 13.6465 7.14648 13.6465C8.58059 13.6465 9.90622 13.1821 10.9812 12.3954L13.9394 15.3536L15.3536 13.9394L12.3954 10.9812C13.1821 9.90622 13.6465 8.58059 13.6465 7.14648C13.6465 3.55663 10.7363 0.646484 7.14648 0.646484ZM2.64648 7.14648C2.64648 4.6612 4.6612 2.64648 7.14648 2.64648C9.63177 2.64648 11.6465 4.6612 11.6465 7.14648C11.6465 9.63177 9.63177 11.6465 7.14648 11.6465C4.6612 11.6465 2.64648 9.63177 2.64648 7.14648Z" fill="currentColor"/></svg>
+                    </span>
+                    <span class="search-bar__text" id="search-bar-text">Снять квартиру, Санкт-Петербург</span>
+                    <span class="search-bar__filter" id="filter-icon-btn" role="button" aria-label="Фильтры">
+                      <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M10 8C11.8638 8 13.4299 6.72523 13.874 5H16V3H13.874C13.4299 1.27477 11.8638 0 10 0C8.13616 0 6.57006 1.27477 6.12602 3H0V5H6.12602C6.57006 6.72523 8.13616 8 10 8ZM10 6C11.1046 6 12 5.10457 12 4C12 2.89543 11.1046 2 10 2C8.89543 2 8 2.89543 8 4C8 5.10457 8.89543 6 10 6Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9.87398 11H16V13H9.87398C9.42994 14.7252 7.86384 16 6 16C4.13616 16 2.57006 14.7252 2.12602 13H0V11H2.12602C2.57006 9.27477 4.13616 8 6 8C7.86384 8 9.42994 9.27477 9.87398 11ZM8 12C8 13.1046 7.10457 14 6 14C4.89543 14 4 13.1046 4 12C4 10.8954 4.89543 10 6 10C7.10457 10 8 10.8954 8 12Z" fill="currentColor"/></svg>
+                      <span class="search-bar__filter-dot"></span>
+                    </span>
+                  </button>
+                </div>
+
+                <div class="quickfilters">
+                  <!-- «Транспортная доступность»: мои места / время в пути (иконку и подпись ставит commute-ui.js) -->
+                  <button class="qf-chip qf-chip--commute" id="qf-commute" type="button">
+                    <span class="qf-chip__icon"></span>
+                    <span class="qf-chip__label" id="qf-commute-label">Мои места</span>
+                  </button>
+                  <button class="qf-chip is-set" id="qf-rent" type="button">
+                    <span class="qf-chip__label" id="qf-deal-label">Снять</span>
+                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
+                  </button>
+                  <button class="qf-chip is-set" id="qf-office" type="button">
+                    <span class="qf-chip__label" id="qf-type-label">Квартира</span>
+                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
+                  </button>
+                  <button class="qf-chip is-set" id="qf-city" type="button">
+                    <span class="qf-chip__label" id="qf-city-label">СПб</span>
+                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
+                  </button>
+                  <button class="qf-chip" id="qf-price" type="button">
+                    <span class="qf-chip__label" id="qf-price-label">Цена</span>
+                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
+                  </button>
+                  <button class="qf-chip" id="qf-area" type="button">
+                    <span class="qf-chip__label" id="qf-area-label">Площадь</span>
+                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
+                  </button>
+                </div>
+              </header>
+
+              <div class="sheet-list" id="sheet-list">
+                <button class="sheet-list__handle-wrap" id="sheet-handle" type="button" aria-label="Развернуть список">
+                  <span class="sheet-list__handle"></span>
+                </button>
+                <div class="list-scroll" id="results-scroll">
+                  <div class="results-bar">
+                    <span class="results-bar__count" id="results-count"></span>
+                    <div style="position:relative">
+                      <button class="sort-btn" id="sort-btn" type="button" aria-label="Сортировка">
+                        <svg viewBox="0 0 16 16" fill="none"><path d="M4.50008 0.585815L0.292969 4.79292L1.70718 6.20714L3.50008 4.41424V15H5.50008V4.41424L7.29297 6.20714L8.70718 4.79292L4.50008 0.585815Z" fill="currentColor"/><path d="M11.4998 15.4142L7.29272 11.2071L8.70694 9.79292L10.4998 11.5858V1.00003H12.4998V11.5858L14.2927 9.79292L15.7069 11.2071L11.4998 15.4142Z" fill="currentColor"/></svg>
+                      </button>
+                      <div id="sort-menu" hidden style="position:absolute; right:0; top:34px; background:var(--bg-surface); border:1px solid var(--border-divider); border-radius:var(--radius-m); box-shadow:var(--shadow-card); padding:8px; width:200px; z-index:40;"></div>
+                    </div>
+                  </div>
+                  <div id="results-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom sheet: быстрый фильтр «Цена» -->
+          <div class="overlay-backdrop" id="sheet-backdrop"></div>
+          <div class="sheet" id="price-sheet">
+            <button class="sheet__close" id="price-sheet-close" type="button" aria-label="Закрыть">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+            </button>
+            <div class="sheet__header">
+              <span class="sheet__title">Цена</span>
+              <button class="sheet__reset" id="price-sheet-reset" type="button">Сбросить</button>
+            </div>
+            <div class="sheet__body" id="price-sheet-widget"></div>
+            <div class="sheet__footer">
+              <div class="expand-snack" id="price-sheet-expand-snack" hidden>
+                <span class="expand-snack__text" id="price-sheet-expand-snack-text"></span>
+                <button class="expand-snack__btn" id="price-sheet-expand-snack-btn" type="button">Расширить</button>
+              </div>
+              <button class="btn-primary" id="price-sheet-apply" type="button" style="width:100%">
+                Смотреть <span id="price-sheet-count">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Заглушка карточки объявления (UX-тест: тап по сниппету логируется как «открыл карточку») -->
+          <div class="overlay-backdrop" id="card-stub-backdrop"></div>
+          <div class="sheet" id="card-stub">
+            <button class="sheet__close" id="card-stub-close" type="button" aria-label="Закрыть">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+            </button>
+            <div class="sheet__header">
+              <span class="sheet__title">Карточка объявления</span>
+            </div>
+            <div class="sheet__body">
+              <p class="card-stub__text">В этом прототипе карточка не открывается. Вернитесь к выдаче, чтобы продолжить задание.</p>
+              <p class="card-stub__listing" id="card-stub-listing"></p>
+            </div>
+            <div class="sheet__footer">
+              <button class="btn-primary" id="card-stub-back" type="button" style="width:100%">Вернуться к выдаче</button>
+            </div>
+          </div>
+
+          <!-- Bottom sheet: быстрый фильтр «Тип сделки» -->
+          <div class="overlay-backdrop" id="deal-sheet-backdrop"></div>
+          <div class="sheet" id="deal-sheet">
+            <button class="sheet__close" id="deal-sheet-close" type="button" aria-label="Закрыть">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+            </button>
+            <div class="sheet__header">
+              <span class="sheet__title">Тип сделки</span>
+            </div>
+            <div class="sheet__body">
+              <div class="chipset" id="deal-sheet-chips">
+                <button type="button" class="pick-chip" data-value="buy">Купить</button>
+                <button type="button" class="pick-chip" data-value="rent">Снять</button>
+                <button type="button" class="pick-chip" data-value="build">Построить дом</button>
+              </div>
+            </div>
+            <div class="sheet__footer">
+              <button class="btn-primary" id="deal-sheet-apply" type="button" style="width:100%">
+                Смотреть <span id="deal-sheet-count">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom sheet: быстрый фильтр «Тип недвижимости» -->
+          <div class="overlay-backdrop" id="ptype-sheet-backdrop"></div>
+          <div class="sheet" id="ptype-sheet">
+            <button class="sheet__close" id="ptype-sheet-close" type="button" aria-label="Закрыть">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+            </button>
+            <div class="sheet__header">
+              <span class="sheet__title">Тип недвижимости</span>
+            </div>
+            <div class="sheet__body">
+              <div class="chipset" id="ptype-sheet-chips">
+                <button type="button" class="pick-chip" data-value="flat">Квартира</button>
+                <button type="button" class="pick-chip" data-value="room">Комната</button>
+                <button type="button" class="pick-chip" data-value="house">Дом, участок, таунхаус</button>
+                <button type="button" class="pick-chip" data-value="garage">Гараж</button>
+                <button type="button" class="pick-chip" data-value="commercial">Коммерческая</button>
+              </div>
+            </div>
+            <div class="sheet__footer">
+              <button class="btn-primary" id="ptype-sheet-apply" type="button" style="width:100%">
+                Смотреть <span id="ptype-sheet-count">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom sheet: быстрый фильтр «Площадь» -->
+          <div class="overlay-backdrop" id="area-sheet-backdrop"></div>
+          <div class="sheet" id="area-sheet">
+            <button class="sheet__close" id="area-sheet-close" type="button" aria-label="Закрыть">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+            </button>
+            <div class="sheet__header">
+              <span class="sheet__title">Площадь</span>
+              <button class="sheet__reset" id="area-sheet-reset" type="button">Сбросить</button>
+            </div>
+            <div class="sheet__body">
+              <div class="segmented" id="as-area-mode-toggle">
+                <button type="button" class="segmented__opt is-active" data-as-area-mode="people">Кол-во чел.</button>
+                <button type="button" class="segmented__opt" data-as-area-mode="sqm">м²</button>
+              </div>
+
+              <div class="area-panel" data-as-area-panel="sqm" hidden>
+                <div class="field-pair">
+                  <div class="field">
+                    <span class="field__label">от</span>
+                    <input type="number" min="0" id="as-area-min" autocomplete="off" />
+                  </div>
+                  <div class="field">
+                    <span class="field__label">до</span>
+                    <input type="number" min="0" id="as-area-max" autocomplete="off" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="area-panel" data-as-area-panel="people">
+                <div class="area-panel__hint">Укажите сколько сотрудников и тип рассадки, а мы рассчитаем оптимальную площадь</div>
+                <div class="field-pair">
+                  <div class="field">
+                    <span class="field__label">от</span>
+                    <input type="number" min="0" id="as-people-min" autocomplete="off" />
+                    <span class="field__suffix">чел.</span>
+                  </div>
+                  <div class="field">
+                    <span class="field__label">до</span>
+                    <input type="number" min="0" id="as-people-max" autocomplete="off" />
+                    <span class="field__suffix">чел.</span>
+                  </div>
+                </div>
+                <select class="field-select" id="as-seating-select">
+                  <option value="any">Любая</option>
+                  <option value="dense">Плотная рассадка</option>
+                  <option value="standard">Стандартная рассадка</option>
+                  <option value="comfort">Комфортная рассадка</option>
+                  <option value="cabinet">Кабинетная рассадка</option>
+                </select>
+                <div class="area-panel__optimal">
+                  <svg viewBox="0 0 16 16" fill="none"><path d="M1 15V9H3V13H7V15H1Z" fill="currentColor"/><path d="M15 1V7H13V3H9V1H15Z" fill="currentColor"/><path d="M1 1H7V3H3V7H1V1Z" fill="currentColor"/><path d="M15 15H9V13H13V9H15V15Z" fill="currentColor"/></svg>
+                  <span>Оптимальная площадь: <b id="as-optimal-area">0</b> м²</span>
+                </div>
+              </div>
+            </div>
+            <div class="sheet__footer">
+              <button class="btn-primary" id="area-sheet-apply" type="button" style="width:100%">
+                Смотреть <span id="area-sheet-count">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom sheet: карточка объявления по клику на пин карты -->
+          <div class="overlay-backdrop" id="pin-sheet-backdrop"></div>
+          <div class="sheet" id="pin-sheet">
+            <div class="sheet__handle"></div>
+            <div class="sheet__body" id="pin-sheet-body"></div>
+          </div>
+
+          <!-- Полноэкранная модалка «Фильтры» -->
+          <div class="overlay-backdrop" id="modal-backdrop"></div>
+          <div class="filters-modal" id="filters-modal">
+            <div class="filters-modal__statusbar">
+              <span>9:41</span>
+              <div class="statusbar__icons">
+                <svg width="18" height="11" viewBox="0 0 18 11" fill="none"><rect x="0" y="7" width="3" height="4" rx="0.5" fill="currentColor"/><rect x="4.5" y="5" width="3" height="6" rx="0.5" fill="currentColor"/><rect x="9" y="3" width="3" height="8" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="currentColor"/></svg>
+                <svg width="15" height="11" viewBox="0 0 15 11" fill="none"><path d="M7.5 9.5a1 1 0 100 2 1 1 0 000-2zM4 6.7a5 5 0 017 0M1.3 4a9 9 0 0112.4 0" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none"/></svg>
+                <svg width="24" height="11" viewBox="0 0 24 11" fill="none"><rect x="0.5" y="0.5" width="20" height="10" rx="2.5" stroke="currentColor"/><rect x="2" y="2" width="17" height="7" rx="1.3" fill="currentColor"/><rect x="21.5" y="3.5" width="1.5" height="4" rx="0.7" fill="currentColor"/></svg>
+              </div>
+            </div>
+            <div class="filters-modal__header">
+              <button class="filters-modal__header-btn" id="filters-modal-close" type="button" aria-label="Закрыть">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
+              </button>
+              <span class="filters-modal__title">Фильтры</span>
+              <button class="filters-modal__header-btn filters-modal__reset" id="filters-modal-reset" type="button">Сбросить</button>
+            </div>
+
+            <div class="filters-modal__body">
+              <div class="filter-section" id="f-scope-section">
+                <div class="chipset">
+                  <button type="button" class="pick-chip f-deal-chip" data-deal="buy">Купить</button>
+                  <button type="button" class="pick-chip f-deal-chip is-active" data-deal="rent">Снять</button>
+                  <button type="button" class="pick-chip f-deal-chip" data-deal="build">Построить дом</button>
+                </div>
+
+                <div class="filter-subtitle">Тип недвижимости</div>
+                <div class="chipset">
+                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="flat">Квартира</button>
+                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="room">Комната</button>
+                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="house">Дом, участок, таунхаус</button>
+                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="garage">Гараж</button>
+                  <button type="button" class="pick-chip f-ptype-chip is-active" data-ptype="commercial">Коммерческая</button>
+                </div>
+
+                <div id="f-commercial-block">
+                  <div class="filter-subtitle">Коммерческая площадь и бизнесы</div>
+                  <div class="chipset">
+                    <button type="button" class="pick-chip f-subtype-chip is-active" data-subtype="office">Офис</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="free-purpose">Помещение свобод. назнач.</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="retail">Торговая площадь</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="warehouse">Склад</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="catering">Общепит</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="production">Производство</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="auto-service">Автосервис</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="building">Здание</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="services">Бытовые услуги</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="rental-business">Арендный бизнес</button>
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="ready-business">Готовый бизнес</button>
+                  </div>
+
+                  <div class="filter-subtitle">Земля</div>
+                  <div class="chipset">
+                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="land">Коммерческая земля</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="filter-section" id="f-location-section">
+                <div class="filter-section__title">Расположение</div>
+                <button class="filter-row" type="button">
+                  <img class="filter-row__icon" src="icons/CellImageContainer.svg" alt="" width="24" height="24" />
+                  <span class="filter-row__text">
+                    <span class="filter-row__label">Санкт-Петербург и область</span>
+                    <span class="filter-row__value">Метро, район, адрес, шоссе</span>
+                  </span>
+                  <svg class="filter-row__chevron" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.354 3.293L4.939 4.707L8.232 8L4.939 11.293L6.354 12.707L11.061 8L6.354 3.293Z" fill="currentColor"/></svg>
+                </button>
+                <button class="filter-row" id="f-commute-row" type="button">
+                  <img class="filter-row__icon" src="icons/Icon.svg" alt="" width="24" height="24" />
+                  <span class="filter-row__text">
+                    <span class="filter-row__label" id="f-commute-label">Время в пути</span>
+                    <span class="filter-row__value" id="f-commute-value"></span>
+                  </span>
+                  <svg class="filter-row__chevron" viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.354 3.293L4.939 4.707L8.232 8L4.939 11.293L6.354 12.707L11.061 8L6.354 3.293Z" fill="currentColor"/></svg>
+                </button>
+              </div>
+
+              <div class="filter-section" id="f-price-section">
+                <div class="filter-section__title">Цена</div>
+                <div id="f-price-widget"></div>
+              </div>
+
+            </div>
+
+            <div class="filters-modal__footer">
+              <div class="expand-snack" id="f-expand-snack" hidden>
+                <span class="expand-snack__text" id="f-expand-snack-text"></span>
+                <button class="expand-snack__btn" id="f-expand-snack-btn" type="button">Расширить</button>
+              </div>
+              <button class="btn-primary" id="filters-modal-apply" type="button">
+                Смотреть <span id="f-footer-count">0 объявлений</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>const MIX_MODE = 'separate';</script>
+    <!--
+      Классические <script>-теги (не type="module") — принципиально: прототип
+      должен открываться и напрямую двойным кликом по этому файлу (file://),
+      а ES-модули там блокируются CORS. Порядок — по зависимостям, каждый файл
+      кладёт себя в общий window.App.
+    -->
+    <script src="js/format.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/seating-types.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/price.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/tracking.js"></script>
+    <script src="js/commute.js"></script>
+    <script src="js/histogram-shape.js"></script>
+    <script src="js/overlay.js"></script>
+    <script src="js/proto-info.js"></script>
+    <script src="js/prototype-panel.js"></script>
+    <script src="js/chip-groups.js"></script>
+    <script src="js/pin-sheet-ref.js"></script>
+    <script src="js/filtering.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/price-widget.js"></script>
+    <script src="js/price-sheet.js"></script>
+    <script src="js/area-sheet.js"></script>
+    <script src="js/category-sheets.js"></script>
+    <script src="js/card-stub.js"></script>
+    <script src="js/filters-modal.js"></script>
+    <script src="js/sort.js"></script>
+    <script src="js/pin-sheet.js"></script>
+    <script src="js/map-sheet.js"></script>
+    <script src="js/commute-ui.js"></script>
+    <script src="js/commute-map.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
