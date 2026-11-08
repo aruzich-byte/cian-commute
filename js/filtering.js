@@ -13,7 +13,7 @@
   // В варианте «Поиск по времени» категория сразу ограничена зоной досягаемости — как
   // выбранный район или метро: от неё считаются и выдача, и счётчики во всех фильтрах.
   function currentScope() {
-    return scopeListings(state.dealType, state.propertyType).filter(commute.inZone);
+    return scopeListings().filter(commute.inZone);
   }
 
   function getBaseFiltered() {

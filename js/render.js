@@ -39,23 +39,7 @@
   }
 
   // ---------- Быстрые фильтры (шапка) ----------
-  // Категория выдачи в шапке: строка поиска и первые три чипса
-  const DEAL_LABELS = { rent: "Снять", buy: "Купить", build: "Построить" };
-  const TYPE_LABELS = { flat: "Квартира", room: "Комната", house: "Дом", garage: "Гараж", commercial: "Коммерческая" };
-  const TYPE_ACCUSATIVE = { flat: "квартиру", room: "комнату", house: "дом", garage: "гараж", commercial: "коммерческую" };
-
-  function updateCategoryLabels() {
-    const deal = DEAL_LABELS[state.dealType] || "Снять";
-    // Дома ищем по Петербургу и области — как на Циане по умолчанию
-    const isHouse = state.propertyType === "house";
-    document.getElementById("qf-deal-label").textContent = deal;
-    document.getElementById("qf-type-label").textContent = TYPE_LABELS[state.propertyType] || "Тип";
-    document.getElementById("qf-city-label").textContent = isHouse ? "СПб и ЛО" : "СПб";
-    document.getElementById("search-bar-text").textContent = `${deal} ${TYPE_ACCUSATIVE[state.propertyType] || ""}, ${isHouse ? "СПб и область" : "Санкт-Петербург"}`;
-  }
-
   function updateQuickFilterLabels() {
-    updateCategoryLabels();
     const priceChip = document.getElementById("qf-price-label");
     const { min, max } = state.price[state.priceMode];
     const mode = state.priceMode;

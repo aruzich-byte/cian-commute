@@ -83,8 +83,6 @@ function buildPriceWidget(container, opts) {
     // молча оставалась «старой», хотя плейсхолдеры (см. ниже) уже обновлялись.
     // Пересчёт дешёвый (один проход по <=LISTINGS.length объектам), так что
     // кэшируем только статическую ветку — по всем LISTINGS, которая не меняется.
-    // Кэш статической ветки сбрасывается при смене категории (снять/купить ×
-    // квартира/дом) — у каждой своя шкала и свои объявления, см. setPriceScope.
     const scope = getPriceScope();
     if (!ui.histogramAdaptive && histogramCache[mode] && histogramCache[mode].scope === scope) return histogramCache[mode];
     const bounds = PRICE_BOUNDS[mode];

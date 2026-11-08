@@ -34,27 +34,19 @@
 
         <div class="prototype-panel__section">
           <div class="prototype-panel__section-title">Транспортная доступность</div>
-          <div class="prototype-panel__chips" data-proto-param="commute">
-            <button class="proto-chip" type="button" data-value="places">Мои места</button>
-            <button class="proto-chip" type="button" data-value="zone">Поиск по времени</button>
-          </div>
-          <div class="prototype-panel__chips">
+          <div class="prototype-panel__chips prototype-panel__chips--wrap">
             <button class="proto-chip" type="button" id="proto-commute-sample">Заполнить примером</button>
             <button class="proto-chip" type="button" id="proto-commute-clear">Очистить места</button>
+            <a class="proto-chip" href="todo.html" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit">Задачи</a>
+            <a class="proto-chip" href="transport.html" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit">Что решили</a>
           </div>
         </div>
+
         <div class="prototype-panel__section">
-          <div class="prototype-panel__section-title">Тип сделки</div>
-          <div class="prototype-panel__chips" data-proto-param="deal">
-            <button class="proto-chip" type="button" data-value="rent">Снять</button>
-            <button class="proto-chip" type="button" data-value="buy">Купить</button>
-          </div>
-        </div>
-        <div class="prototype-panel__section">
-          <div class="prototype-panel__section-title">Тип недвижимости</div>
-          <div class="prototype-panel__chips" data-proto-param="type">
-            <button class="proto-chip" type="button" data-value="flat">Квартира</button>
-            <button class="proto-chip" type="button" data-value="house">Дом</button>
+          <div class="prototype-panel__section-title">Районы</div>
+          <div class="prototype-panel__chips prototype-panel__chips--wrap">
+            <button class="proto-chip" type="button" data-districts-version="1">1 · виджет при приближении</button>
+            <button class="proto-chip" type="button" data-districts-version="2">2 · как в Авиасейлс</button>
           </div>
         </div>
       </aside>
@@ -95,14 +87,6 @@
                   <button class="qf-chip qf-chip--commute" id="qf-commute" type="button">
                     <span class="qf-chip__icon"></span>
                     <span class="qf-chip__label" id="qf-commute-label">Мои места</span>
-                  </button>
-                  <button class="qf-chip is-set" id="qf-rent" type="button">
-                    <span class="qf-chip__label" id="qf-deal-label">Снять</span>
-                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
-                  </button>
-                  <button class="qf-chip is-set" id="qf-office" type="button">
-                    <span class="qf-chip__label" id="qf-type-label">Квартира</span>
-                    <svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.707 6.35354L11.2928 4.93933L7.99992 8.23222L4.70703 4.93933L3.29282 6.35354L7.99992 11.0607L12.707 6.35354Z" fill="currentColor"/></svg>
                   </button>
                   <button class="qf-chip is-set" id="qf-city" type="button">
                     <span class="qf-chip__label" id="qf-city-label">СПб</span>
@@ -171,59 +155,12 @@
               <span class="sheet__title">Карточка объявления</span>
             </div>
             <div class="sheet__body">
-              <p class="card-stub__text">В этом прототипе карточка не открывается. Вернитесь к выдаче, чтобы продолжить задание.</p>
+              <p class="card-stub__text">Полная карточка в прототипе не открывается — здесь только блок о дороге. Вернитесь к выдаче, чтобы продолжить задание.</p>
               <p class="card-stub__listing" id="card-stub-listing"></p>
+              <div id="card-stub-road"></div>
             </div>
             <div class="sheet__footer">
               <button class="btn-primary" id="card-stub-back" type="button" style="width:100%">Вернуться к выдаче</button>
-            </div>
-          </div>
-
-          <!-- Bottom sheet: быстрый фильтр «Тип сделки» -->
-          <div class="overlay-backdrop" id="deal-sheet-backdrop"></div>
-          <div class="sheet" id="deal-sheet">
-            <button class="sheet__close" id="deal-sheet-close" type="button" aria-label="Закрыть">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
-            </button>
-            <div class="sheet__header">
-              <span class="sheet__title">Тип сделки</span>
-            </div>
-            <div class="sheet__body">
-              <div class="chipset" id="deal-sheet-chips">
-                <button type="button" class="pick-chip" data-value="buy">Купить</button>
-                <button type="button" class="pick-chip" data-value="rent">Снять</button>
-                <button type="button" class="pick-chip" data-value="build">Построить дом</button>
-              </div>
-            </div>
-            <div class="sheet__footer">
-              <button class="btn-primary" id="deal-sheet-apply" type="button" style="width:100%">
-                Смотреть <span id="deal-sheet-count">0</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Bottom sheet: быстрый фильтр «Тип недвижимости» -->
-          <div class="overlay-backdrop" id="ptype-sheet-backdrop"></div>
-          <div class="sheet" id="ptype-sheet">
-            <button class="sheet__close" id="ptype-sheet-close" type="button" aria-label="Закрыть">
-              <svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>
-            </button>
-            <div class="sheet__header">
-              <span class="sheet__title">Тип недвижимости</span>
-            </div>
-            <div class="sheet__body">
-              <div class="chipset" id="ptype-sheet-chips">
-                <button type="button" class="pick-chip" data-value="flat">Квартира</button>
-                <button type="button" class="pick-chip" data-value="room">Комната</button>
-                <button type="button" class="pick-chip" data-value="house">Дом, участок, таунхаус</button>
-                <button type="button" class="pick-chip" data-value="garage">Гараж</button>
-                <button type="button" class="pick-chip" data-value="commercial">Коммерческая</button>
-              </div>
-            </div>
-            <div class="sheet__footer">
-              <button class="btn-primary" id="ptype-sheet-apply" type="button" style="width:100%">
-                Смотреть <span id="ptype-sheet-count">0</span>
-              </button>
             </div>
           </div>
 
@@ -317,45 +254,6 @@
             </div>
 
             <div class="filters-modal__body">
-              <div class="filter-section" id="f-scope-section">
-                <div class="chipset">
-                  <button type="button" class="pick-chip f-deal-chip" data-deal="buy">Купить</button>
-                  <button type="button" class="pick-chip f-deal-chip is-active" data-deal="rent">Снять</button>
-                  <button type="button" class="pick-chip f-deal-chip" data-deal="build">Построить дом</button>
-                </div>
-
-                <div class="filter-subtitle">Тип недвижимости</div>
-                <div class="chipset">
-                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="flat">Квартира</button>
-                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="room">Комната</button>
-                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="house">Дом, участок, таунхаус</button>
-                  <button type="button" class="pick-chip f-ptype-chip" data-ptype="garage">Гараж</button>
-                  <button type="button" class="pick-chip f-ptype-chip is-active" data-ptype="commercial">Коммерческая</button>
-                </div>
-
-                <div id="f-commercial-block">
-                  <div class="filter-subtitle">Коммерческая площадь и бизнесы</div>
-                  <div class="chipset">
-                    <button type="button" class="pick-chip f-subtype-chip is-active" data-subtype="office">Офис</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="free-purpose">Помещение свобод. назнач.</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="retail">Торговая площадь</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="warehouse">Склад</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="catering">Общепит</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="production">Производство</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="auto-service">Автосервис</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="building">Здание</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="services">Бытовые услуги</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="rental-business">Арендный бизнес</button>
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="ready-business">Готовый бизнес</button>
-                  </div>
-
-                  <div class="filter-subtitle">Земля</div>
-                  <div class="chipset">
-                    <button type="button" class="pick-chip f-subtype-chip" data-subtype="land">Коммерческая земля</button>
-                  </div>
-                </div>
-              </div>
-
               <div class="filter-section" id="f-location-section">
                 <div class="filter-section__title">Расположение</div>
                 <button class="filter-row" type="button">
@@ -425,14 +323,17 @@
     <script src="js/price-widget.js"></script>
     <script src="js/price-sheet.js"></script>
     <script src="js/area-sheet.js"></script>
-    <script src="js/category-sheets.js"></script>
     <script src="js/card-stub.js"></script>
     <script src="js/filters-modal.js"></script>
     <script src="js/sort.js"></script>
     <script src="js/pin-sheet.js"></script>
     <script src="js/map-sheet.js"></script>
     <script src="js/commute-ui.js"></script>
+    <script src="js/road-questions.js"></script>
     <script src="js/commute-map.js"></script>
+    <script src="js/districts.js"></script>
+    <script src="js/districts-ui.js"></script>
+    <script src="js/districts-v2.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

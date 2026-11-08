@@ -84,7 +84,6 @@
       placemark.events.add("click", () => {
         if (window.App.track) window.App.track("Пин на карте", { item });
         if (pinSheetRef.current) pinSheetRef.current.open(item);
-        if (window.App.onListingPinClick) window.App.onListingPinClick(item);
       });
       return placemark;
     });
@@ -92,13 +91,11 @@
     fitToCategory(items);
   }
 
-  // При первом показе и при смене категории подгоняем карту под пины — дома
-  // в области иначе оказываются далеко за краем карты с центром на Дворцовой.
-  let fittedScope = null;
+  // При первом показе подгоняем карту под пины
+  let fitted = false;
   function fitToCategory(items) {
-    const scope = `${state.dealType}/${state.propertyType}`;
-    if (scope === fittedScope || items.length === 0) return;
-    fittedScope = scope;
+    if (fitted || items.length === 0) return;
+    fitted = true;
     const bounds = clusterer.getBounds();
     if (bounds) yandexMap.setBounds(bounds, { checkZoomRange: true, zoomMargin: [140, 40, 360, 40] }).then(() => {
       if (yandexMap.getZoom() > 13) yandexMap.setZoom(13);

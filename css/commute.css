@@ -53,26 +53,34 @@
   color: var(--text-secondary);
 }
 
-/* ---------- Плашка-подсказка в выдаче ---------- */
+/* ---------- Плашка-подсказка в выдаче: одна строка ---------- */
 .commute-banner {
+  position: relative;
   margin: 4px 16px 12px;
-  padding: 16px;
-  border-radius: var(--radius-card);
-  background: var(--accent-secondary-bg);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-l);
+  background: var(--bg-surface);
 }
 
-.commute-banner__top {
+.commute-banner__main {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
+  width: 100%;
+  padding: 12px 32px 12px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .commute-banner__icon {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--bg-surface);
+  background: var(--accent-secondary-bg);
   color: var(--accent);
   display: flex;
   align-items: center;
@@ -80,47 +88,52 @@
 }
 
 .commute-banner__icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .commute-banner__text {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .commute-banner__title {
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 700;
+  font-size: 15px;
+  line-height: 19px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .commute-banner__desc {
-  margin: 4px 0 0;
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 13px;
+  line-height: 17px;
   color: var(--text-secondary);
 }
 
 .commute-banner__close {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
   background: none;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .commute-banner__close svg {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
+/* Кнопка в пустой выдаче (renderZoneEmpty) */
 .commute-banner__btn {
   width: 100%;
   height: 40px;
@@ -152,48 +165,84 @@
 }
 
 .commute-intro {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-size: 14px;
   line-height: 18px;
   color: var(--text-secondary);
 }
 
 .commute-note {
-  margin: 4px 0 0;
+  margin: 8px 0 0;
   font-size: 12px;
   line-height: 16px;
   color: var(--text-muted);
 }
 
-.commute-starter__title {
-  margin-top: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.kind-chip {
-  gap: 6px;
-}
-
 .kind-chip svg {
   width: 16px;
   height: 16px;
-  color: var(--accent);
+  color: var(--text-secondary);
 }
 
-/* Список мест */
-.place-row {
+.pick-chip.kind-chip {
+  gap: 6px;
+}
+
+.pick-chip.kind-chip.is-active svg {
+  color: currentColor;
+}
+
+/* Пустой список: сетка типов мест 3 × 2 */
+.kind-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.kind-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 4px 12px;
+  border: none;
+  border-radius: var(--radius-l);
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.kind-tile svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-primary);
+}
+
+/* Список мест: строка = иконка · название и адрес · способ и лимит */
+.place-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.place-row,
+.commute-row {
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 0;
+  min-height: 56px;
+  padding: 8px 0;
   border: none;
-  border-bottom: 1px solid var(--border-divider);
   background: none;
   text-align: left;
   font-family: inherit;
+}
+
+.place-row + .place-row,
+.commute-row + .commute-row {
+  border-top: 1px solid var(--border-divider);
 }
 
 .place-row__icon {
@@ -201,8 +250,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: var(--accent-secondary-bg);
-  color: var(--accent);
+  background: var(--bg-page);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,15 +271,15 @@
 }
 
 .place-row__title {
-  font-size: 16px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 19px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .place-row__address {
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 13px;
+  line-height: 17px;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -238,62 +287,72 @@
 }
 
 .place-row__meta {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.place-row__meta svg {
+  width: 16px;
+  height: 16px;
+}
+
+.place-row--add .place-row__icon {
+  background: none;
+  border: 1.5px dashed var(--border-chip);
+  color: var(--accent);
+}
+
+.place-row--add .place-row__icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.place-row--add .place-row__title {
+  color: var(--accent);
+}
+
+/* Форма места: тип — строкой чипов, подписи секций — мелкие и серые */
+.editor-section + .editor-section {
+  margin-top: 20px;
+}
+
+.editor-section__title {
+  margin-bottom: 8px;
   font-size: 13px;
   line-height: 16px;
   color: var(--text-secondary);
 }
 
-.place-row__meta svg {
-  width: 14px;
-  height: 14px;
+.editor-section__hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
 }
 
-.place-row__chevron {
+.editor-section__hint[hidden] {
+  display: none;
+}
+
+.chip-scroll {
   display: flex;
-  color: var(--text-muted);
-}
-
-.place-row__chevron svg {
-  width: 16px;
-  height: 16px;
-}
-
-.place-add {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 14px 0 4px;
-  border: none;
-  background: none;
-  color: var(--accent);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 600;
+  margin: 0 -16px 12px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.place-add svg {
-  width: 16px;
-  height: 16px;
+.chip-scroll::-webkit-scrollbar {
+  display: none;
 }
 
-/* Форма места */
-.editor-section + .editor-section {
-  margin-top: 22px;
-}
-
-.editor-section__title {
-  margin-bottom: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.editor-section__title + .chipset {
-  margin-top: 0;
+.chip-scroll .pick-chip {
+  flex-shrink: 0;
 }
 
 .editor-name {
@@ -432,97 +491,85 @@
   font-weight: 600;
 }
 
-/* Подробности: все места × все способы добраться */
-.commute-block {
-  margin-top: 12px;
-  padding: 12px 14px 10px;
-  border-radius: var(--radius-l);
-  background: var(--bg-page);
-}
-
-.commute-block__head {
+/* Подробности: место · другие способы мелко · время своим способом и вердикт по лимиту */
+.commute-row__alts {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 4px;
-}
-
-.commute-block .place-row__icon {
-  background: var(--bg-surface);
-}
-
-.commute-mode {
-  display: flex;
-  align-items: center;
   gap: 10px;
-  padding: 8px 0;
-  border-top: 1px solid var(--border-soft);
-  font-size: 14px;
-  line-height: 18px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-muted);
 }
 
-.commute-mode__icon {
-  display: flex;
-}
-
-.commute-mode__icon svg {
-  width: 16px;
-  height: 16px;
-}
-
-.commute-mode__label {
-  flex: 1;
-  display: flex;
+.commute-alt {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 3px;
 }
 
-.commute-mode__tag {
-  padding: 1px 6px;
-  border-radius: var(--radius-s);
-  background: var(--accent-secondary-bg);
-  color: var(--accent-secondary-text);
-  font-size: 11px;
+.commute-alt svg {
+  width: 13px;
+  height: 13px;
+}
+
+.commute-row__time {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.commute-row__value {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
   font-weight: 600;
-}
-
-.commute-mode__time {
-  font-weight: 600;
-}
-
-.commute-mode.is-current {
   color: var(--text-primary);
 }
 
-.commute-verdict {
-  padding-top: 6px;
-  font-size: 13px;
-  font-weight: 600;
+.commute-row__value svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-secondary);
 }
 
-.commute-verdict.is-ok {
+.commute-row__status {
+  font-size: 12px;
+  line-height: 15px;
+  color: var(--text-secondary);
+}
+
+.commute-row__time.is-ok .commute-row__status {
   color: var(--positive-text);
 }
 
-.commute-verdict.is-over {
+.commute-row__time.is-over .commute-row__value,
+.commute-row__time.is-over .commute-row__status {
   color: var(--warning-text);
 }
 
+.btn-link {
+  border: none;
+  background: none;
+  padding: 6px;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 /* ---------- Карта: пины мест, подписи линий, выбор точки ---------- */
+/* Пин места: небольшой тёмный кружок; подпись — только на крупном зуме (класс на #map-area, см. commute-map.js) */
 .place-pin {
   position: absolute;
-  transform: translate(-50%, -20px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
 .place-pin__icon {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 2px solid var(--color-white);
   background: var(--text-primary);
@@ -530,15 +577,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(13, 22, 46, 0.3);
+  box-shadow: 0 2px 6px rgba(13, 22, 46, 0.3);
 }
 
 .place-pin__icon svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
 }
 
 .place-pin__label {
+  position: absolute;
+  top: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
   padding: 1px 6px;
   border-radius: 6px;
   background: var(--bg-surface);
@@ -550,29 +602,8 @@
   box-shadow: 0 2px 8px rgba(13, 22, 46, 0.15);
 }
 
-.commute-link-label {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: var(--radius-pill);
-  background: var(--text-primary);
-  color: var(--color-white);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 16px;
-  white-space: nowrap;
-}
-
-.commute-link-label svg {
-  width: 12px;
-  height: 12px;
-}
-
-.commute-link-label.is-over {
-  background: var(--warning-text);
+.map-area.show-place-labels .place-pin__label {
+  display: block;
 }
 
 .map-pick {
@@ -661,4 +692,184 @@ body.is-map-picking #modal-backdrop {
 
 .filters-modal.is-hidden-for-pick {
   visibility: hidden;
+}
+
+/* ---------- Вопросы продавцу о дороге (см. js/road-questions.js) ---------- */
+.road-block {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-divider);
+}
+
+.road-block__title {
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.road-answer {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: var(--radius-l);
+  background: var(--bg-page);
+}
+
+.road-answer__q {
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+
+.road-answer__text {
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.road-answer__text svg {
+  display: none;
+}
+
+.road-answer__meta {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.road-ask__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.road-ask__q {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 19px;
+  color: var(--accent);
+  text-align: left;
+  cursor: pointer;
+}
+
+.road-ask__q + .road-ask__q {
+  border-top: 1px solid var(--border-divider);
+}
+
+.road-ask__q svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Чат: высокая шторка, лента сообщений и поле ввода */
+.road-chat {
+  height: 80%;
+}
+
+.road-chat .sheet__body {
+  flex: 1;
+}
+
+.chat-listing {
+  padding: 8px 12px;
+  border-radius: var(--radius-m);
+  background: var(--bg-page);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.chat-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+.chat-msg {
+  max-width: 80%;
+  padding: 9px 12px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 20px;
+}
+
+.chat-msg--me {
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  background: var(--accent);
+  color: var(--color-white);
+}
+
+.chat-msg--seller {
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.chat-msg__status {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  text-align: right;
+  opacity: 0.75;
+}
+
+.chat-typing,
+.chat-note {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.chat-note {
+  align-self: center;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border-radius: var(--radius-m);
+  background: var(--positive-bg);
+  color: var(--positive-text);
+  text-align: center;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.chat-input input {
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-chip);
+  border-radius: var(--radius-pill);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.chat-input__send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--color-white);
+  cursor: pointer;
+}
+
+.chat-input__send svg {
+  width: 18px;
+  height: 18px;
 }

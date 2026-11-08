@@ -5,9 +5,6 @@
 // обычными <script> тегами в порядке зависимостей (см. index.html).
 (function () {
   const state = {
-    dealType: "rent", // 'buy' | 'rent' | 'build' — данные есть для buy/rent
-    propertyType: "flat", // 'flat' | 'room' | 'house' | 'garage' | 'commercial' — данные есть для flat/house
-    subtypes: new Set(),
     priceMode: "total", // 'total' | 'perSqm'
     price: {
       total: { min: null, max: null },
@@ -54,20 +51,39 @@
 
   window.App = window.App || {};
   // ---------- Параметры ссылки (для UX-тестов) ----------
-  // ?deal=rent|buy & type=flat|house — с какой выдачи стартует прототип;
+  // Прототип — только аренда квартир в Петербурге.
   // ?task=… — номер задания, ?pid=… — id респондента от платформы тестирования
-  // (оба уходят в логи, см. tracking.js), ?commute=places|zone — вариант «Транспортной доступности»
-  // (places — «Мои места», zone — «Поиск по времени», см. commute.js).
+  // (оба уходят в логи, см. tracking.js).
   const params = new URLSearchParams(window.location.search);
-  const DEALS = ["rent", "buy", "build"];
-  const TYPES = ["flat", "room", "house", "garage", "commercial"];
-  if (DEALS.includes(params.get("deal"))) state.dealType = params.get("deal");
-  if (TYPES.includes(params.get("type"))) state.propertyType = params.get("type");
   const session = {
     task: params.get("task") || "",
     pid: params.get("pid") || "",
-    commute: params.get("commute") === "zone" ? "zone" : "places",
   };
 
-  Object.assign(window.App, { state, ui, session });
+  // Версия районов: 1 — виджет «О районе» при приближении карты, 2 — как в отелях Авиасейлс:
+  // подписи районов на карте и кнопка «Районы» со списком. ?districts=1|2 в ссылке важнее
+  // выбора в панели прототипа (он запоминается в этом браузере).
+  const DISTRICTS_KEY = "districts-version";
+  let districtsVersion = params.get("districts");
+  if (districtsVersion !== "1" && districtsVersion !== "2") {
+    try {
+      districtsVersion = localStorage.getItem(DISTRICTS_KEY) === "2" ? "2" : "1";
+    } catch (e) {
+      districtsVersion = "1";
+    }
+  }
+  ui.districtsVersion = districtsVersion;
+
+  function setDistrictsVersion(v) {
+    try {
+      localStorage.setItem(DISTRICTS_KEY, v);
+    } catch (e) {
+      /* без сохранения — версия из ссылки */
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("districts");
+    window.location.href = url.toString();
+  }
+
+  Object.assign(window.App, { state, ui, session, setDistrictsVersion });
 })();

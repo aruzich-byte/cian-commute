@@ -1,17 +1,12 @@
 (function () {
   const {
     scopeListings,
-    setPriceScope,
     state,
     ui,
     pluralize,
     computeMixSuggestion,
     buildPriceWidget,
     createOverlayController,
-    wireSingleSelectChips,
-    wireMultiToggleChips,
-    activeChip,
-    activeChips,
     renderResults,
     commute,
   } = window.App;
@@ -45,27 +40,13 @@ function setupFiltersModal() {
     priceWidget.setRange(pendingExpand.mode, pendingExpand.min, pendingExpand.max);
   });
 
-  const dealChips = Array.from(document.querySelectorAll(".f-deal-chip"));
-  const propertyTypeChips = Array.from(document.querySelectorAll(".f-ptype-chip"));
-  const subtypeChips = Array.from(document.querySelectorAll(".f-subtype-chip"));
-  const commercialBlock = document.getElementById("f-commercial-block");
-
-  // Категория, выбранная в чипсах модалки (ещё не применённая)
-  function draftDeal() {
-    return activeChip(dealChips)?.dataset.deal ?? null;
-  }
-
-  function draftPropertyType() {
-    return activeChip(propertyTypeChips)?.dataset.ptype ?? null;
-  }
-
   // Черновая выборка без учёта цены — на неё накладывается диапазон цены
   // отдельно через computeMixSuggestion, чтобы посчитать заодно и «подмешивание»
   // (сколько объектов добавит расширение диапазона) для снека «Расширить».
   // Площадь в модалке больше не редактируется — учитываем ту, что выбрана
   // в быстром фильтре «Площадь» (state.areaMin/areaMax).
   function computeDraftBase() {
-    return scopeListings(draftDeal(), draftPropertyType()).filter((item) => {
+    return scopeListings().filter((item) => {
       if (!commute.inZone(item)) return false;
       if (state.areaMin != null && item.area < state.areaMin) return false;
       if (state.areaMax != null && item.area > state.areaMax) return false;
@@ -87,24 +68,6 @@ function setupFiltersModal() {
     }
   }
 
-  // Смена категории (снять/купить × квартира/дом) меняет шкалу цены — у аренды
-  // и продажи разные порядки цен. Черновой диапазон цены сбрасываем, виджет
-  // пересобираем под новую шкалу. Если модалку закроют без «Показать», шкала
-  // вернётся к применённой категории (см. close).
-  function onCategoryChange() {
-    setPriceScope(draftDeal(), draftPropertyType());
-    draft.price = { total: { min: null, max: null }, perSqm: { min: null, max: null } };
-    mountPriceWidget();
-    computeDraftCount();
-  }
-
-  wireSingleSelectChips(dealChips, onCategoryChange);
-  wireMultiToggleChips(subtypeChips, computeDraftCount);
-  wireSingleSelectChips(propertyTypeChips, () => {
-    commercialBlock.style.display = draftPropertyType() === "commercial" ? "" : "none";
-    onCategoryChange();
-  });
-
   function mountPriceWidget() {
     priceWidget = buildPriceWidget(document.getElementById("f-price-widget"), {
       draft,
@@ -116,11 +79,6 @@ function setupFiltersModal() {
 
   function open(scrollToPrice) {
     draft = { priceMode: state.priceMode, price: { total: { ...state.price.total }, perSqm: { ...state.price.perSqm } } };
-    dealChips.forEach((chip) => chip.classList.toggle("is-active", chip.dataset.deal === state.dealType));
-    propertyTypeChips.forEach((chip) => chip.classList.toggle("is-active", chip.dataset.ptype === state.propertyType));
-    subtypeChips.forEach((chip) => chip.classList.toggle("is-active", state.subtypes.has(chip.dataset.subtype)));
-    commercialBlock.style.display = state.propertyType === "commercial" ? "" : "none";
-
     mountPriceWidget();
     computeDraftCount();
 
@@ -137,20 +95,12 @@ function setupFiltersModal() {
   function close() {
     overlay.close();
     hideExpandSnack();
-    setPriceScope(state.dealType, state.propertyType);
   }
 
   function apply() {
     state.priceMode = draft.priceMode;
     state.price.total = { ...draft.price.total };
     state.price.perSqm = { ...draft.price.perSqm };
-    const prevCategory = `${state.dealType}/${state.propertyType}`;
-    state.dealType = activeChip(dealChips)?.dataset.deal ?? null;
-    state.propertyType = activeChip(propertyTypeChips)?.dataset.ptype ?? null;
-    if (window.App.track && prevCategory !== `${state.dealType}/${state.propertyType}`) {
-      window.App.track("Сменил категорию", { value: "общие фильтры" });
-    }
-    state.subtypes = new Set(activeChips(subtypeChips).map((c) => c.dataset.subtype));
     close();
     renderResults();
   }

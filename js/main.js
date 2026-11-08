@@ -1,13 +1,9 @@
 (function () {
-  const { state, setPriceScope, renderResults, setupPriceSheet, setupAreaSheet, setupDealSheet, setupPropertyTypeSheet, setupFiltersModal, setupSort, setupMapSheet, initYandexMap, setupPinSheet, pinSheetRef } = window.App;
+  const { renderResults, setupPriceSheet, setupAreaSheet, setupFiltersModal, setupSort, setupMapSheet, initYandexMap, setupPinSheet, pinSheetRef } = window.App;
 
   document.addEventListener("DOMContentLoaded", () => {
-    // Категория могла прийти из ссылки (?deal=&type=) — шкала цены под неё
-    setPriceScope(state.dealType, state.propertyType);
     const priceSheet = setupPriceSheet();
     const areaSheet = setupAreaSheet();
-    const dealSheet = setupDealSheet();
-    const propertyTypeSheet = setupPropertyTypeSheet();
     const filtersModal = setupFiltersModal();
     setupSort();
     // Без карты (класс no-map на <body>) — список сразу на весь экран, Яндекс.Карты не грузим
@@ -16,8 +12,6 @@
     if (mapEnabled) initYandexMap();
     pinSheetRef.current = setupPinSheet();
 
-    document.getElementById("qf-rent").addEventListener("click", () => dealSheet.open());
-    document.getElementById("qf-office").addEventListener("click", () => propertyTypeSheet.open());
     document.getElementById("qf-city").addEventListener("click", () => filtersModal.open(false));
     document.getElementById("qf-price").addEventListener("click", () => priceSheet.open());
     document.getElementById("qf-area").addEventListener("click", () => areaSheet.open());

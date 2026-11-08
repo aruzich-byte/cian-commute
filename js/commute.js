@@ -1,21 +1,19 @@
 (function () {
-  const { session, ICONS } = window.App;
+  const { ICONS } = window.App;
 
   // ---------- «Транспортная доступность»: мои места и время в пути ----------
-  // Два варианта прототипа (переключатель в панели, ?commute=…):
-  //   'places' — «Мои места»: человек отмечает важные места, они видны на карте,
-  //              а в сниппете — сколько до них ехать; выдача не фильтруется;
-  //   'zone'   — «Поиск по времени»: человек задаёт, куда и сколько готов ехать,
-  //              на карте рисуется зона досягаемости, выдача — только из неё.
+  // Человек отмечает важные места: они видны на карте, а в сниппете — сколько до них ехать.
+  // Для места можно задать, сколько готов ехать: тогда на карте рисуется зона досягаемости,
+  // а в выдаче остаются только квартиры из неё. Без лимита место ничего не отсекает.
   // Время считаем приблизительно (расстояние × извилистость дорог / скорость + ожидание),
   // без API маршрутов: для UX-теста важна механика, а не точность до минуты.
 
   const KINDS = {
-    home: { label: "Дом", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M2 7.5 8 2.5l6 5V14h-4v-4H6v4H2V7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
     work: { label: "Работа", icon: '<svg viewBox="0 0 16 16" fill="none"><rect x="1.8" y="4.8" width="12.4" height="8.6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><path d="M5.5 4.8V3.3c0-.6.4-1 1-1h3c.6 0 1 .4 1 1v1.5M1.8 8.6h12.4" stroke="currentColor" stroke-width="1.6"/></svg>' },
     study: { label: "Учёба", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M1 6l7-3.5L15 6 8 9.5 1 6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M4 7.6V11c0 .9 1.8 2.2 4 2.2s4-1.3 4-2.2V7.6" stroke="currentColor" stroke-width="1.6"/></svg>' },
     parents: { label: "Родители", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M8 13.6S2 10 2 6.1a3 3 0 0 1 6-1.1 3 3 0 0 1 6 1.1c0 3.9-6 7.5-6 7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
     sport: { label: "Спорт", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M2 8h12M4.5 4.8v6.4M11.5 4.8v6.4M2.3 6.4v3.2M13.7 6.4v3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' },
+    home: { label: "Дом", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M2 7.5 8 2.5l6 5V14h-4v-4H6v4H2V7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' },
     other: { label: "Другое", icon: '<svg viewBox="0 0 16 16" fill="none"><path d="M8 14.5s5-4.3 5-8.3a5 5 0 0 0-10 0c0 4 5 8.3 5 8.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="8" cy="6.2" r="1.8" fill="currentColor"/></svg>' },
   };
 
@@ -29,7 +27,6 @@
 
   const LIMITS = [15, 30, 45, 60];
 
-  const ICON_CLOCK = '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.6"/><path d="M8 4.6V8l2.4 1.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const ICON_PLACES = KINDS.other.icon;
 
   // Подсказки адресов: Яндекс-саджест без API-ключа не работает, поэтому в прототипе —
@@ -121,10 +118,8 @@
   }
 
   // ---------- Хранилище мест ----------
-  // У каждого варианта свои места — чтобы прохождение одного не влияло на другой.
-  // Пишем в localStorage: места переживают перезагрузку, как в аккаунте на Циане.
-  const variant = session.commute;
-  const STORAGE_KEY = `commute-places:${variant}`;
+  // Пишем в localStorage: места переживают перезагрузку, как в аккаунте на Циане
+  const STORAGE_KEY = "commute-places";
   let places = [];
   try {
     places = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -168,14 +163,17 @@
   }
 
   // ---------- Что это значит для выдачи ----------
-  // Вариант «Поиск по времени»: объявление проходит, если до КАЖДОГО места укладывается в лимит
+  // Объявление проходит, если до КАЖДОГО места с лимитом укладывается в него
+  function limitedPlaces() {
+    return places.filter((p) => p.limit != null);
+  }
+
   function zoneActive() {
-    return variant === "zone" && places.length > 0;
+    return limitedPlaces().length > 0;
   }
 
   function inZone(item) {
-    if (!zoneActive()) return true;
-    return places.every((p) => minutesTo(p, item) <= p.limit);
+    return limitedPlaces().every((p) => minutesTo(p, item) <= p.limit);
   }
 
   // Для сортировки «Ближе к моим местам» — суммарное время до всех мест
@@ -207,11 +205,9 @@
 
   window.App = window.App || {};
   window.App.commute = {
-    variant,
     KINDS,
     MODES,
     LIMITS,
-    ICON_CLOCK,
     ICON_PLACES,
     ADDRESS_SUGGESTIONS,
     SAMPLE_PLACES,
@@ -224,6 +220,7 @@
     removePlace,
     setPlaces,
     onChange,
+    limitedPlaces,
     zoneActive,
     inZone,
     totalMinutes,

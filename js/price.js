@@ -1,18 +1,15 @@
 (function () {
   const { LISTINGS } = window.App;
 
-  // perSqm: у продажи — цена за м², у аренды — годовая ставка за м² (см. buildListings)
+  // perSqm — годовая ставка за м² (см. buildListings)
   function priceMetric(item, mode) {
     return mode === "perSqm" ? item.pricePerSqm : item.price;
   }
 
-  // ---------- Категория выдачи (снять/купить × квартира/дом) ----------
-  // Шкала цены у каждой категории своя: аренда квартиры за 30 тыс и дом за 45 млн
-  // на одной оси не уживаются. PRICE_BOUNDS / PRICE_BOUNDS_RAW — общие объекты,
-  // которые читают виджеты цены, поэтому при смене категории мутируем их на месте.
-  function scopeListings(dealType, propertyType) {
-    const deal = dealType === "buy" ? "sale" : dealType;
-    return LISTINGS.filter((item) => item.dealType === deal && item.propertyType === propertyType);
+  // ---------- Выдача: в прототипе только аренда квартир ----------
+  // PRICE_BOUNDS / PRICE_BOUNDS_RAW — общие объекты, которые читают виджеты цены.
+  function scopeListings() {
+    return LISTINGS;
   }
 
   let PRICE_SCOPE = [];
@@ -43,13 +40,13 @@
   const PRICE_BOUNDS_RAW = { total: { min: 0, max: 0 }, perSqm: { min: 0, max: 0 } };
   const PRICE_BOUNDS = { total: { min: 0, max: 0 }, perSqm: { min: 0, max: 0 } };
 
-  // Шаг округления границ — от порядка цены (тысячи для аренды, сотни тысяч для продажи)
+  // Шаг округления границ — от порядка цены
   function roundStep(v) {
     return Math.pow(10, Math.max(1, Math.floor(Math.log10(Math.max(v, 1))) - 1));
   }
 
-  function setPriceScope(dealType, propertyType) {
-    PRICE_SCOPE = scopeListings(dealType, propertyType);
+  function setPriceScope() {
+    PRICE_SCOPE = scopeListings();
     const source = PRICE_SCOPE.length ? PRICE_SCOPE : LISTINGS;
     ["total", "perSqm"].forEach((mode) => {
       const raw = priceBoundsFromData(source.map((l) => priceMetric(l, mode)));
@@ -62,8 +59,7 @@
   // Объявления текущей категории — по ним строится неадаптивная гистограмма цены
   const getPriceScope = () => PRICE_SCOPE;
 
-  // По умолчанию прототип открывается на «Снять квартиру» (см. state.js)
-  setPriceScope("rent", "flat");
+  setPriceScope();
 
   // Цены на офисы — сильно правосторонне распределены (разброс в тысячи раз между
   // самым дешёвым и самым дорогим лотом), поэтому шкала гистограммы и слайдера — логарифмическая:

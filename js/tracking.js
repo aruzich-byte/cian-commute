@@ -7,29 +7,27 @@
   const LOG_ENDPOINT =
     "https://script.google.com/macros/s/AKfycbzpfRvHrAn1Hki__-6fhvJ3m84_d6ewY_kTYK__9JI618Na0qDYm62NCFL156a_85wVJw/exec";
 
-  const { session, state } = window.App;
+  const { session } = window.App;
   const startedAt = Date.now();
   const sessionId = `${startedAt.toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
   const queue = [];
-  const CATEGORY_LABELS = { "rent/flat": "Снять квартиру", "buy/flat": "Купить квартиру", "rent/house": "Снять дом", "buy/house": "Купить дом" };
 
   function listingLabel(item) {
     if (!item) return "";
-    const price = `${Math.round(item.price).toLocaleString("ru-RU")} ₽${item.dealType === "rent" ? "/мес" : ""}`;
-    const what = item.propertyType === "house" ? item.houseKind : item.flatType === "studio" ? "студия" : item.rooms ? `${item.rooms}-комн.` : "";
+    const price = `${Math.round(item.price).toLocaleString("ru-RU")} ₽/мес`;
+    const what = item.flatType === "studio" ? "студия" : item.rooms ? `${item.rooms}-комн.` : "";
     return `${price} · ${what} · ${item.address || ""}`;
   }
 
   function track(event, { item = null, value = "" } = {}) {
-    const category = `${state.dealType}/${state.propertyType}`;
     const row = {
       ts: new Date().toISOString(),
       sec: Math.round((Date.now() - startedAt) / 100) / 10,
       session: sessionId,
       pid: session.pid,
       task: session.task,
-      variant: session.commute,
-      category: CATEGORY_LABELS[category] || category,
+      variant: window.App.ui.districtsVersion === "2" ? "merged · районы v2" : "merged",
+      category: "Снять квартиру",
       event,
       listingId: item ? item.id : "",
       listing: listingLabel(item),

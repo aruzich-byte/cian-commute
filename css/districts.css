@@ -1,0 +1,677 @@
+/* ---------- Районы: карточка на карте и шторка района (см. js/districts*.js) ---------- */
+
+/* Виджет «О районе» справа сверху: фото с оценкой и подпись под ним, крестик в углу */
+.district-card {
+  position: absolute;
+  right: 12px;
+  z-index: 5;
+  width: 72px;
+}
+
+.district-card[hidden] {
+  display: none;
+}
+
+.district-card.is-new {
+  animation: district-card-in 0.25s ease;
+}
+
+@keyframes district-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.district-card__open {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 4px 6px;
+  border: none;
+  border-radius: 14px;
+  background: var(--bg-surface);
+  box-shadow: 0 4px 14px rgba(13, 22, 46, 0.2);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.district-card__art {
+  position: relative;
+  display: block;
+  height: 56px;
+  border-radius: 10px;
+  background: #cfd8e6;
+  overflow: hidden;
+}
+
+.district-card__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.district-card__score {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--color-white);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 15px;
+}
+
+.district-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 15px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.district-card__close {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 4px rgba(13, 22, 46, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.district-card__close svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Шторка района: фото на всю ширину, заголовок поверх фото, крестик в кружке */
+.district-sheet {
+  max-height: 85%;
+  overflow: hidden;
+}
+
+.district-sheet .sheet__header {
+  display: none;
+}
+
+.district-sheet .sheet__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.district-sheet .sheet__close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.district-sheet .sheet__body {
+  padding-top: 0;
+  /* Футера у шторки нет — отступ снизу под скругление экрана и полоску «домой» */
+  padding-bottom: 32px;
+}
+
+.district-hero {
+  position: relative;
+  height: 280px;
+  margin: 0 -16px 4px;
+  background: #3a4252;
+  overflow: hidden;
+}
+
+.district-hero__photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Сверху лёгкая тень под чип и крестик, снизу — затемнение под текст (плотность — --shade) */
+.district-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.28), transparent 28%),
+    linear-gradient(transparent 35%, rgba(0, 0, 0, calc(var(--shade) * 0.6)) 60%, rgba(0, 0, 0, var(--shade)));
+}
+
+.district-hero__chip {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 30, 30, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--color-white);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 16px;
+}
+
+.district-hero__text {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1;
+  color: var(--color-white);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.district-hero__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  text-shadow: none;
+}
+
+.district-hero__score svg {
+  width: 14px;
+  height: 14px;
+  color: #f5b301;
+}
+
+.district-hero__name {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 30px;
+}
+
+.district-hero__tagline {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 19px;
+  opacity: 0.9;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.district-section {
+  margin-top: 20px;
+}
+
+.district-section__title {
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 23px;
+  color: var(--text-primary);
+}
+
+.district-metro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.district-metro__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.district-metro__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.district-metro--none {
+  color: var(--text-secondary);
+}
+
+.district-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+}
+
+.district-row + .district-row {
+  border-top: 1px solid var(--border-divider);
+}
+
+.district-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.district-row__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.district-row__label {
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.district-row__value {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+
+
+.district-row__note {
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+
+/* Плитки «До центра» и «Пробки вечером» */
+.district-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.district-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--radius-l);
+  background: var(--bg-page);
+}
+
+.district-tile__label {
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+
+.district-tile__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 26px;
+  color: var(--text-primary);
+}
+
+.district-tile__sub {
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+
+.district-transit-note {
+  margin: 4px 0 0;
+}
+
+/* Пробки вечером: значок пробок Яндекс Карт, цвет «светофора» по баллу */
+.district-traffic__icon {
+  flex: none;
+  display: flex;
+  width: 26px;
+  height: 26px;
+}
+
+.district-traffic__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.district-traffic__icon.is-good {
+  color: #3bb34a;
+}
+
+.district-traffic__icon.is-mid {
+  color: #f5b301;
+}
+
+.district-traffic__icon.is-bad {
+  color: #e5322d;
+}
+
+/* Школы: горизонтальная лента карточек, выходит за поля шторки */
+.district-schools {
+  display: flex;
+  gap: 12px;
+  margin: 0 -16px;
+  padding: 0 16px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+}
+
+.district-schools::-webkit-scrollbar {
+  display: none;
+}
+
+.district-school {
+  flex: 0 0 148px;
+  scroll-snap-align: start;
+}
+
+.district-school__photo {
+  display: block;
+  width: 100%;
+  height: 104px;
+  border-radius: var(--radius-l);
+  object-fit: cover;
+  background: #cfd8e6;
+}
+
+.district-school__name {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--text-primary);
+}
+
+.district-school__rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 17px;
+  color: var(--text-primary);
+}
+
+.district-school__rating svg {
+  width: 13px;
+  height: 13px;
+  color: #f5b301;
+}
+
+.district-school__rating span {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+/* «Было полезно?» в конце шторки */
+.district-feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0 8px;
+  padding: 16px;
+  border-radius: var(--radius-l);
+  background: var(--bg-page);
+  text-align: center;
+}
+
+.district-feedback__q {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.district-feedback__btns {
+  display: flex;
+  gap: 8px;
+}
+
+.district-feedback__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: 0 1px 3px rgba(13, 22, 46, 0.12);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.district-feedback__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.district-feedback__btn--no svg {
+  transform: scaleY(-1);
+}
+
+.district-feedback__thanks {
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--text-secondary);
+}
+
+/* ---------- Районы, версия 2 (как в Авиасейлс): подписи на карте, кнопка и список ---------- */
+
+/* Цвета групп: пастельный фон и тёмный текст того же тона */
+.is-center {
+  --group-bg: #fde2d8;
+  --group-fg: #9a3b1b;
+}
+
+.is-old {
+  --group-bg: #f9e0ef;
+  --group-fg: #8c2a63;
+}
+
+.is-green {
+  --group-bg: #dcf2e1;
+  --group-fg: #1e7a3a;
+}
+
+.is-new {
+  --group-bg: #e9e0fb;
+  --group-fg: #6a36b5;
+}
+
+.is-panel {
+  --group-bg: #fff0c4;
+  --group-fg: #7f5a00;
+}
+
+.is-suburb {
+  --group-bg: #dfeaf6;
+  --group-fg: #2d5a8a;
+}
+
+.district-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  height: 24px;
+  padding: 0 4px 0 9px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-pill);
+  background: var(--group-bg);
+  color: var(--group-fg);
+  box-shadow: 0 1px 4px rgba(13, 22, 46, 0.18);
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.district-label svg {
+  width: 12px;
+  height: 12px;
+}
+
+.districts-btn {
+  position: absolute;
+  right: 12px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px 0 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  box-shadow: 0 4px 14px rgba(13, 22, 46, 0.2);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.districts-btn[hidden] {
+  display: none;
+}
+
+.districts-btn svg {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+
+.district-dot {
+  flex: none;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border: 1.5px solid var(--group-fg);
+  border-radius: 50%;
+  background: var(--group-bg);
+}
+
+.districts-list {
+  max-height: 85%;
+}
+
+.districts-list__groups .pick-chip {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.districts-list__hint {
+  margin: -4px 0 8px;
+}
+
+.district-row-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid var(--border-divider);
+  background: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.district-row-item__photo {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-l);
+  object-fit: cover;
+  background: #cfd8e6;
+}
+
+.district-row-item__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.district-row-item__name {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+.district-row-item__tagline {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}
+
+.district-row-item__time {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.district-row-item__time span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.district-school__note {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 17px;
+  color: var(--text-secondary);
+}

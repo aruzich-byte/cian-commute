@@ -12,10 +12,10 @@
       { value: "new", label: "Сначала новые" },
       { value: "area_desc", label: "Сначала большая площадь" },
     ];
-    // «Ближе к моим местам» — только в варианте «Мои места» и когда места уже отмечены
+    // «Ближе к моим местам» — когда места уже отмечены
     const { commute } = window.App;
     function renderMenu() {
-      const all = commute.variant === "places" && commute.getPlaces().length ? [...options, { value: "commute", label: "Ближе к моим местам" }] : options;
+      const all = commute.getPlaces().length ? [...options, { value: "commute", label: "Ближе к моим местам" }] : options;
       menu.innerHTML = all
         .map((o) => `<button type="button" class="preset-chip${state.sort === o.value ? " is-active" : ""}" data-sort="${o.value}" style="display:block;width:100%;text-align:left;margin-bottom:6px;">${o.label}</button>`)
         .join("");

@@ -1,7 +1,7 @@
 (function () {
   const { ICONS, formatPrice, priceMetric, computeResults, pinSheetRef, commute } = window.App;
 
-  // ---------- Тексты сниппета (квартира / дом, аренда / продажа) ----------
+  // ---------- Тексты сниппета ----------
   function formatAreaRu(n) {
     return `${String(n).replace(".", ",")} м²`;
   }
@@ -12,42 +12,13 @@
     return `${item.rooms}-комн. ${item.isApartments ? "апарт." : "кв."}`;
   }
 
-  function floorsWord(n) {
-    return n % 10 === 1 && n % 100 !== 11 ? "этаж" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "этажа" : "этажей";
-  }
-
-  // Квартира: «2-комн. кв. · 50 м² · 11/17 этаж»; дом: «Дом · 154 м² · участок 11,4 сот. · 2 этажа»
+  // «2-комн. кв. · 50 м² · 11/17 этаж»
   function paramsLine(item) {
-    if (item.propertyType === "house") {
-      const parts = [item.houseKind, formatAreaRu(item.area)];
-      if (item.landArea) parts.push(`участок ${String(item.landArea).replace(".", ",")} сот.`);
-      if (item.houseFloors) parts.push(`${item.houseFloors} ${floorsWord(item.houseFloors)}`);
-      return parts.join(" · ");
-    }
     return [flatTypeLabel(item), formatAreaRu(item.area), `${item.floor}/${item.floorsTotal} этаж`].join(" · ");
   }
 
-  // Продажа дома: газ · отопление · канализация (год постройки — в подписях к фото)
-  function houseSaleTermsLine(item) {
-    return [item.gas, item.heating, item.sewer].filter(Boolean).join(" · ");
-  }
-
-  // Продажа квартиры: ремонт и год ремонта (год пока сгенерирован, см. data.js) · мебель
-  function saleTermsLine(item) {
-    if (item.propertyType === "house") return houseSaleTermsLine(item);
-    const repair = item.repairYear ? `${item.repair} ${item.repairYear} г.` : item.repair;
-    return [repair, item.hasFurniture ? "С мебелью" : "Без мебели"].filter(Boolean).join(" · ");
-  }
-
-  // Аренда дома: вместо условий — инфраструктура участка (газ · отопление · вода · санузел в доме)
-  function houseRentTermsLine(item) {
-    return [item.gas, item.heating, item.water, item.toiletInside && "Санузел в доме"].filter(Boolean).join(" · ");
-  }
-
-  // Аренда квартиры: комиссия (clientFee — % от месячной цены), залог (и можно ли частями)
+  // Комиссия (clientFee — % от месячной цены), залог (и можно ли частями)
   function termsLine(item) {
-    if (item.dealType === "sale") return saleTermsLine(item);
-    if (item.propertyType === "house") return houseRentTermsLine(item);
     const parts = [item.clientFee ? `Комиссия ${item.clientFee}%` : "Без комиссии"];
     if (item.deposit) parts.push(`Залог ${formatPrice(item.deposit)}${item.depositByParts ? " (можно частями)" : ""}`);
     else if (item.deposit === 0) parts.push("Без залога");
@@ -85,14 +56,6 @@
   }
 
   function transportHtml(item) {
-    // Дома за городом — трасса и расстояние от КАД вместо метро
-    if (item.propertyType === "house" && item.highway) {
-      return `
-      <div class="card__transport">
-        <span class="card__transport-item">${ICONS.car}${item.highway} · ${item.highwayKm} км</span>
-      </div>
-    `;
-    }
     if (!item.metro) return "";
     const color = item.metroColor ? `#${item.metroColor}` : "var(--text-secondary)";
     const timeIcon = item.metroTransport === "transport" ? ICONS.bus : ICONS.walk;
@@ -117,14 +80,8 @@
     return `<div class="card__labels">${promo}${group}</div>`;
   }
 
-  // Аренда — цена в месяц; продажа квартиры — цена и серым цена за м²; продажа дома — только цена
+  // Цена в месяц
   function priceRowHtml(item) {
-    if (item.dealType === "sale" && item.propertyType === "house") {
-      return `<div class="card__price">${formatPrice(item.price)}</div>`;
-    }
-    if (item.dealType === "sale") {
-      return `<div class="card__price">${formatPrice(item.price)}<span class="card__price-sqm">${formatPrice(item.pricePerSqm)}/м²</span></div>`;
-    }
     return `<div class="card__price">${formatPrice(item.price)}/мес.</div>`;
   }
 
@@ -149,8 +106,8 @@
       <div class="mix-carousel__photo">
       </div>
       <div class="mix-carousel__body">
-        <div class="mix-carousel__price">${formatPrice(item.price)}${item.dealType === "sale" ? "" : "/мес."}</div>
-        <div class="mix-carousel__type">${item.propertyType === "house" ? item.houseKind : flatTypeLabel(item)} · ${formatAreaRu(item.area)}</div>
+        <div class="mix-carousel__price">${formatPrice(item.price)}/мес.</div>
+        <div class="mix-carousel__type">${flatTypeLabel(item)} · ${formatAreaRu(item.area)}</div>
         <div class="mix-carousel__meta">${item.metro || ""}</div>
       </div>
     `;

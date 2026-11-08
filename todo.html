@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Задачи прототипа</title>
+    <link rel="stylesheet" href="css/tokens.css" />
+    <style>
+      /* Отдельная страница со списком дел по «Транспортной доступности».
+         Галочки запоминаются в этом браузере (localStorage), сам список — в разметке ниже. */
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: var(--font-family);
+        color: var(--text-primary);
+        background: var(--bg-page);
+      }
+
+      .todo {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 40px 16px 64px;
+      }
+
+      .todo__back {
+        font-size: 14px;
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .todo__title {
+        margin: 12px 0 4px;
+        font-size: 28px;
+        line-height: 34px;
+        letter-spacing: -0.6px;
+      }
+
+      .todo__subtitle {
+        margin: 0 0 24px;
+        font-size: 15px;
+        color: var(--text-secondary);
+      }
+
+      .task {
+        display: flex;
+        gap: 14px;
+        padding: 18px 20px;
+        border-radius: var(--radius-card);
+        background: var(--bg-surface);
+      }
+
+      .task + .task {
+        margin-top: 12px;
+      }
+
+      .task input {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        margin: 2px 0 0;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+
+      .task__title {
+        font-size: 17px;
+        font-weight: 600;
+        line-height: 22px;
+      }
+
+      .task.is-done .task__title {
+        color: var(--text-muted);
+        text-decoration: line-through;
+      }
+
+      .task__who {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .task__tag {
+        padding: 2px 8px;
+        border-radius: var(--radius-s);
+        background: var(--accent-secondary-bg);
+        color: var(--accent-secondary-text);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .task__body {
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 20px;
+        color: var(--text-secondary);
+      }
+
+      .task__body p {
+        margin: 0 0 8px;
+      }
+
+      .task__body ul {
+        margin: 0 0 8px;
+        padding-left: 18px;
+      }
+
+      .task__body b {
+        color: var(--text-primary);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="todo">
+      <a class="todo__back" href="index.html">← К прототипу</a>
+      <h1 class="todo__title">Задачи</h1>
+      <p class="todo__subtitle">Транспортная доступность — что сделать вне прототипа</p>
+
+      <label class="task" data-task="reviews-export">
+        <input type="checkbox" />
+        <div>
+          <div class="task__title">Попросить выгрузку отзывов и обращений про дорогу</div>
+          <div class="task__who">
+            <span class="task__tag">Поддержка</span>
+            <span class="task__tag">Продакт</span>
+          </div>
+          <div class="task__body">
+            <p><b>Зачем.</b> В открытых источниках жалоб на транспортную доступность мало и они старые — нужна реальная частота болей, а не отдельные сигналы.</p>
+            <p><b>Что попросить:</b></p>
+            <ul>
+              <li>у поддержки — обращения пользователей и продавцов за последний год;</li>
+              <li>у продакта — отзывы из App Store, Google Play и RuStore (если есть выгрузка, например через AppFollow).</li>
+            </ul>
+            <p><b>Слова для поиска:</b> метро, минут, пешком, транспортом, далеко, дорога, пробки, грунтовка, зимой, подъезд, до работы, Подмосковье / область.</p>
+            <p><b>Что уже нашли в открытых отзывах:</b> время до метро в объявлениях не совпадает с реальным; продавец не может исправить автоматическое «8 минут транспортом» и теряет покупателей; в поиске по «Москве» попадает область.</p>
+          </div>
+        </div>
+      </label>
+    </main>
+
+    <script>
+      // Отметки «сделано» — только в этом браузере
+      document.querySelectorAll(".task").forEach((task) => {
+        const key = `todo:${task.dataset.task}`;
+        const box = task.querySelector("input");
+        try {
+          box.checked = localStorage.getItem(key) === "1";
+        } catch (e) {
+          /* без сохранения */
+        }
+        task.classList.toggle("is-done", box.checked);
+        box.addEventListener("change", () => {
+          task.classList.toggle("is-done", box.checked);
+          try {
+            localStorage.setItem(key, box.checked ? "1" : "0");
+          } catch (e) {
+            /* без сохранения */
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

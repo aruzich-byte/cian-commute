@@ -1,12 +1,10 @@
 (function () {
   const { commute, createOverlayController, pluralize, formatPrice, computeResults, renderResults } = window.App;
   const { KINDS, MODES, LIMITS } = commute;
-  const isZone = commute.variant === "zone";
-  const MAX_PLACES = isZone ? 3 : 5;
+  const MAX_PLACES = 5;
   const track = (event, opts) => window.App.track && window.App.track(event, opts);
 
   const ICON_CLOSE = '<svg viewBox="0 0 16 16" fill="none"><path d="M14.207 3.20703L9.41406 8L14.207 12.793L12.793 14.207L8 9.41406L3.20703 14.207L1.79297 12.793L6.58594 8L1.79297 3.20703L3.20703 1.79297L8 6.58594L12.793 1.79297L14.207 3.20703Z" fill="currentColor"/></svg>';
-  const ICON_CHEVRON = '<svg viewBox="0 0 16 16" fill="none"><path fill-rule="evenodd" clip-rule="evenodd" d="M6.354 3.293L4.939 4.707L8.232 8L4.939 11.293L6.354 12.707L11.061 8L6.354 3.293Z" fill="currentColor"/></svg>';
   const ICON_PLUS = '<svg viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
   const ICON_TARGET = '<svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.6"/><circle cx="8" cy="8" r="1.6" fill="currentColor"/><path d="M8 1v2.2M8 12.8V15M1 8h2.2M12.8 8H15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const ICON_SEARCH = '<svg viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
@@ -47,10 +45,14 @@
     return place.limit ? `до ${place.limit} мин` : "время не важно";
   }
 
+  // Способ и лимит одной короткой подписью справа в строке места: «[автобус] 40 мин»
+  function placeMetaHtml(place) {
+    return `<span class="place-row__meta">${MODES[place.mode].icon}${place.limit ? `${place.limit} мин` : ""}</span>`;
+  }
+
   // ---------- Список мест ----------
   const list = createSheet("commute-list-sheet", "list");
-  list.title.textContent = isZone ? "Время в пути" : "Мои места";
-  list.reset.hidden = !isZone;
+  list.title.textContent = "Мои места";
 
   function resultsCount() {
     const { base, strict, priceActive } = computeResults();
@@ -59,9 +61,7 @@
 
   function renderList() {
     const places = commute.getPlaces();
-    const intro = isZone
-      ? "Покажем только квартиры, откуда вы доберётесь до каждого адреса за указанное время"
-      : "Покажем их на карте и в каждом объявлении — сколько до них добираться";
+    list.reset.hidden = !places.length;
     const rows = places
       .map(
         (p) => `
@@ -70,28 +70,28 @@
           <span class="place-row__text">
             <span class="place-row__title">${commute.placeTitle(p)}</span>
             <span class="place-row__address">${p.address}</span>
-            <span class="place-row__meta">${MODES[p.mode].icon}${MODES[p.mode].label} · ${limitText(p)}</span>
           </span>
-          <span class="place-row__chevron">${ICON_CHEVRON}</span>
+          ${placeMetaHtml(p)}
         </button>`
       )
       .join("");
-    // Пустой список — сразу предлагаем типы мест: один тап, и форма уже знает, что это
+    // Пустой список — короткое пояснение и сетка типов мест: один тап, и форма уже знает, что это
     const starter = places.length
       ? ""
-      : `<div class="commute-starter">
-          <div class="commute-starter__title">${isZone ? "Куда нужно ездить?" : "С чего начнём?"}</div>
-          <div class="chipset">${Object.entries(KINDS)
-            .map(([key, k]) => `<button type="button" class="pick-chip kind-chip" data-kind="${key}">${k.icon}${k.label}</button>`)
-            .join("")}</div>
-        </div>`;
+      : `<p class="commute-intro">Покажем, сколько ехать до них от каждой квартиры</p>
+         <div class="kind-grid">${Object.entries(KINDS)
+           .map(([key, k]) => `<button type="button" class="kind-tile kind-chip" data-kind="${key}">${k.icon}<span>${k.label}</span></button>`)
+           .join("")}</div>`;
     const addBtn =
       places.length && places.length < MAX_PLACES
-        ? `<button class="place-add" type="button" data-role="add">${ICON_PLUS}${isZone ? "Добавить ещё адрес" : "Добавить место"}</button>`
+        ? `<button class="place-row place-row--add" type="button" data-role="add"><span class="place-row__icon">${ICON_PLUS}</span><span class="place-row__title">Добавить место</span></button>`
         : "";
-    list.body.innerHTML = `<p class="commute-intro">${intro}</p>${starter}<div class="place-list">${rows}</div>${addBtn}`;
+    list.body.innerHTML = `${starter}<div class="place-list">${rows}${addBtn}</div>`;
 
-    if (isZone) {
+    // Пустой список — без кнопки внизу: выбор типа сам ведёт дальше
+    list.footer.style.display = places.length ? "" : "none";
+    // Есть лимит — выдача уже отфильтрована, показываем, сколько осталось
+    if (commute.zoneActive()) {
       const n = resultsCount();
       list.footer.innerHTML = `<button class="btn-primary" type="button" data-role="done">Смотреть ${n} ${pluralize(n, "объявление", "объявления", "объявлений")}</button>`;
     } else {
@@ -100,6 +100,7 @@
   }
 
   list.body.addEventListener("click", (e) => {
+    if (e.target.closest('[data-role="add"]')) return openEditor(null);
     const row = e.target.closest(".place-row");
     if (row) return openEditor(commute.getPlaces().find((p) => p.id === row.dataset.id));
     const kind = e.target.closest(".kind-chip");
@@ -108,18 +109,18 @@
   });
   list.footer.addEventListener("click", (e) => {
     if (!e.target.closest('[data-role="done"]')) return;
-    track(isZone ? "Время в пути: смотреть" : "Мои места: готово", { value: `${commute.getPlaces().length} мест` });
+    track("Мои места: готово", { value: `${commute.getPlaces().length} мест, с лимитом ${commute.limitedPlaces().length}` });
     closeList();
   });
   list.reset.addEventListener("click", () => {
-    track("Время в пути: сбросить");
+    track("Мои места: сбросить");
     commute.setPlaces([]);
   });
   list.closeBtn.addEventListener("click", () => closeList());
   list.backdrop.addEventListener("click", () => closeList());
 
   function openList(source) {
-    track(isZone ? "Время в пути: открыл" : "Мои места: открыл", { value: source });
+    track("Мои места: открыл", { value: source });
     renderList();
     list.overlay.open();
   }
@@ -138,9 +139,9 @@
     editingId = place ? place.id : null;
     draft = place
       ? { ...place }
-      : { kind: presetKind || "work", title: "", address: "", lat: null, lon: null, mode: "transit", limit: isZone ? 30 : null };
+      : { kind: presetKind || "work", title: "", address: "", lat: null, lon: null, mode: "transit", limit: null };
     addressOpen = !draft.address;
-    editor.title.textContent = place ? commute.placeTitle(place) : isZone ? "Куда ездите" : "Новое место";
+    editor.title.textContent = place ? commute.placeTitle(place) : "Новое место";
     renderEditor();
     editor.overlay.open();
   }
@@ -168,11 +169,10 @@
   }
 
   function renderEditor() {
-    const limits = isZone ? LIMITS : [null, ...LIMITS];
+    const limits = [null, ...LIMITS];
     editor.body.innerHTML = `
       <div class="editor-section">
-        <div class="editor-section__title">Что это за место</div>
-        <div class="chipset">${Object.entries(KINDS)
+        <div class="chip-scroll">${Object.entries(KINDS)
           .map(([key, k]) => `<button type="button" class="pick-chip kind-chip${draft.kind === key ? " is-active" : ""}" data-kind="${key}">${k.icon}${k.label}</button>`)
           .join("")}</div>
         <div class="field editor-name"${draft.kind === "other" ? "" : " hidden"}>
@@ -180,7 +180,6 @@
         </div>
       </div>
       <div class="editor-section">
-        <div class="editor-section__title">Адрес</div>
         <div class="field">
           <span class="field__icon">${ICON_SEARCH}</span>
           <input type="text" data-role="address" placeholder="Улица, дом или место" value="${draft.address || ""}" autocomplete="off" />
@@ -194,10 +193,11 @@
           .join("")}</div>
       </div>
       <div class="editor-section">
-        <div class="editor-section__title">${isZone ? "Сколько готовы ехать" : "Сколько готовы ехать (необязательно)"}</div>
-        <div class="chipset">${limits
-          .map((l) => `<button type="button" class="pick-chip limit-chip${draft.limit === l ? " is-active" : ""}" data-limit="${l ?? ""}">${l ? `до ${l} мин` : "Не важно"}</button>`)
+        <div class="editor-section__title">Сколько готовы ехать, мин</div>
+        <div class="mode-switch">${limits
+          .map((l) => `<button type="button" class="mode-switch__opt limit-chip${draft.limit === l ? " is-active" : ""}" data-limit="${l ?? ""}">${l ?? "Любое"}</button>`)
           .join("")}</div>
+        <p class="editor-section__hint" data-role="limit-hint"${draft.limit ? "" : " hidden"}>Квартиры, откуда дольше, скроем из выдачи</p>
       </div>
     `;
     renderEditorFooter();
@@ -240,21 +240,21 @@
     const kind = e.target.closest(".kind-chip");
     if (kind) {
       draft.kind = kind.dataset.kind;
-      if (!editingId) editor.title.textContent = isZone ? "Куда ездите" : "Новое место";
       editor.body.querySelectorAll(".kind-chip").forEach((c) => c.classList.toggle("is-active", c === kind));
       editor.body.querySelector(".editor-name").hidden = draft.kind !== "other";
       return;
     }
-    const mode = e.target.closest(".mode-switch__opt");
+    const mode = e.target.closest("[data-mode]");
     if (mode) {
       draft.mode = mode.dataset.mode;
-      editor.body.querySelectorAll(".mode-switch__opt").forEach((c) => c.classList.toggle("is-active", c === mode));
+      editor.body.querySelectorAll("[data-mode]").forEach((c) => c.classList.toggle("is-active", c === mode));
       return;
     }
     const limit = e.target.closest(".limit-chip");
     if (limit) {
       draft.limit = limit.dataset.limit ? Number(limit.dataset.limit) : null;
       editor.body.querySelectorAll(".limit-chip").forEach((c) => c.classList.toggle("is-active", c === limit));
+      editor.body.querySelector('[data-role="limit-hint"]').hidden = draft.limit == null;
       return;
     }
     const suggest = e.target.closest("[data-suggest]");
@@ -365,52 +365,46 @@
   // Это то, что в продукте жило бы в карточке объекта: все места × все способы добраться
   const details = createSheet("commute-details-sheet", "list");
   details.title.textContent = "Дорога до ваших мест";
+  let detailsItem = null;
 
   function openCommuteDetails(item) {
     track("Открыл время до мест", { item });
+    detailsItem = item;
     const blocks = commute
       .getPlaces()
       .map((p) => {
+        // Одна строка на место: время своим способом крупно, вердикт по лимиту — цветом,
+        // остальные способы — мелкой строкой ниже
         const current = commute.minutesTo(p, item);
-        let verdict = "";
-        if (p.limit) {
-          verdict =
-            current <= p.limit
-              ? `<div class="commute-verdict is-ok">Укладываетесь в ${p.limit} мин</div>`
-              : `<div class="commute-verdict is-over">Дольше вашего лимита на ${commute.formatMinutes(current - p.limit)}</div>`;
-        }
-        const modes = Object.entries(MODES)
-          .map(([key, m]) => {
-            const min = commute.minutesTo(p, item, key);
-            return `<div class="commute-mode${key === p.mode ? " is-current" : ""}">
-              <span class="commute-mode__icon">${m.icon}</span>
-              <span class="commute-mode__label">${m.label}${key === p.mode ? '<span class="commute-mode__tag">ваш способ</span>' : ""}</span>
-              <span class="commute-mode__time">${commute.formatMinutes(min)}</span>
-            </div>`;
-          })
+        const over = p.limit != null && current > p.limit;
+        const status = p.limit == null ? "" : over ? `на ${commute.formatMinutes(current - p.limit)} дольше` : `в пределах ${p.limit} мин`;
+        const others = Object.entries(MODES)
+          .filter(([key]) => key !== p.mode)
+          .map(([key, m]) => `<span class="commute-alt">${m.icon}${commute.formatMinutes(commute.minutesTo(p, item, key))}</span>`)
           .join("");
-        return `<div class="commute-block">
-          <div class="commute-block__head">
-            <span class="place-row__icon">${KINDS[p.kind].icon}</span>
-            <span class="place-row__text">
-              <span class="place-row__title">${commute.placeTitle(p)}</span>
-              <span class="place-row__address">${p.address}</span>
-            </span>
-          </div>
-          ${modes}
-          ${verdict}
+        return `<div class="commute-row">
+          <span class="place-row__icon">${KINDS[p.kind].icon}</span>
+          <span class="place-row__text">
+            <span class="place-row__title">${commute.placeTitle(p)}</span>
+            <span class="commute-row__alts">${others}</span>
+          </span>
+          <span class="commute-row__time${over ? " is-over" : p.limit != null ? " is-ok" : ""}">
+            <span class="commute-row__value">${MODES[p.mode].icon}${commute.formatMinutes(current)}</span>
+            ${status ? `<span class="commute-row__status">${status}</span>` : ""}
+          </span>
         </div>`;
       })
       .join("");
-    const price = `${formatPrice(item.price)}${item.dealType === "rent" ? "/мес." : ""}`;
+    const price = `${formatPrice(item.price)}/мес.`;
     details.body.innerHTML = `
       <p class="commute-intro">${price} · ${item.address}</p>
-      ${blocks}
-      <p class="commute-note">Время примерное, без учёта пробок в час пик</p>
+      <div class="place-list">${blocks}</div>
+      <p class="commute-note">Примерно, без учёта пробок в час пик</p>
+      <div data-role="road">${window.App.road.roadBlockHtml(item)}</div>
     `;
     details.footer.innerHTML = `
       <button class="btn-primary" type="button" data-role="done">Понятно</button>
-      <button class="btn-outline" type="button" data-role="edit">${isZone ? "Изменить адреса" : "Изменить места"}</button>
+      <button class="btn-link" type="button" data-role="edit">Изменить места</button>
     `;
     details.overlay.open();
   }
@@ -421,13 +415,23 @@
       openList("из подробностей");
     } else if (e.target.closest('[data-role="done"]')) details.overlay.close();
   });
+  // Вопросы продавцу о дороге — под временем до мест; пришёл ответ — перерисовываем блок
+  // (road-questions.js подключается после этого файла — привязываемся, когда всё загрузилось)
+  window.addEventListener("load", () => {
+    const { road } = window.App;
+    road.bindRoadBlock(details.body, () => detailsItem, "подробности времени");
+    road.onAnswer((item) => {
+      const slot = details.body.querySelector('[data-role="road"]');
+      if (slot && detailsItem && item.id === detailsItem.id) slot.innerHTML = road.roadBlockHtml(item);
+    });
+  });
   details.closeBtn.addEventListener("click", details.overlay.close);
   details.backdrop.addEventListener("click", details.overlay.close);
 
   // ---------- Точки входа: быстрый фильтр, строка в «Фильтрах», плашка в выдаче ----------
   const qfChip = document.getElementById("qf-commute");
   const qfLabel = document.getElementById("qf-commute-label");
-  qfChip.querySelector(".qf-chip__icon").innerHTML = isZone ? commute.ICON_CLOCK : commute.ICON_PLACES;
+  qfChip.querySelector(".qf-chip__icon").innerHTML = commute.ICON_PLACES;
   qfChip.addEventListener("click", () => openList("быстрый фильтр"));
   document.getElementById("f-commute-row").addEventListener("click", () => openList("фильтры"));
 
@@ -435,21 +439,14 @@
     const places = commute.getPlaces();
     qfChip.classList.toggle("is-set", places.length > 0);
     const rowValue = document.getElementById("f-commute-value");
-    document.getElementById("f-commute-label").textContent = isZone ? "Время в пути" : "Мои места";
-    if (isZone) {
-      if (!places.length) qfLabel.textContent = "Время в пути";
-      else if (places.length === 1) qfLabel.textContent = `${commute.placeTitle(places[0])} · до ${places[0].limit} мин`;
-      else qfLabel.textContent = `Время в пути · ${places.length}`;
-      rowValue.textContent = places.length
-        ? places.map((p) => `${commute.placeTitle(p)} до ${p.limit} мин ${MODES[p.mode].short}`).join(", ")
-        : "Куда нужно ездить и сколько готовы тратить";
-    } else {
-      qfLabel.textContent = places.length ? `Мои места · ${places.length}` : "Мои места";
-      rowValue.textContent = places.length ? places.map(commute.placeTitle).join(", ") : "Работа, родители, школа — покажем время в пути";
-    }
+    document.getElementById("f-commute-label").textContent = "Мои места";
+    qfLabel.textContent = places.length ? `Мои места · ${places.length}` : "Мои места";
+    rowValue.textContent = places.length
+      ? places.map((p) => (p.limit != null ? `${commute.placeTitle(p)} до ${p.limit} мин ${MODES[p.mode].short}` : commute.placeTitle(p))).join(", ")
+      : "Работа, родители, школа — покажем время в пути";
   }
 
-  const BANNER_KEY = `commute-banner-dismissed:${commute.variant}`;
+  const BANNER_KEY = "commute-banner-dismissed";
   function bannerDismissed() {
     try {
       return localStorage.getItem(BANNER_KEY) === "1";
@@ -462,22 +459,18 @@
     if (commute.getPlaces().length || bannerDismissed()) return null;
     const el = document.createElement("div");
     el.className = "commute-banner";
+    // Одна строка: весь блок — кнопка, крестик скрывает навсегда
     el.innerHTML = `
-      <div class="commute-banner__top">
-        <span class="commute-banner__icon">${isZone ? commute.ICON_CLOCK : commute.ICON_PLACES}</span>
-        <div class="commute-banner__text">
-          <div class="commute-banner__title">${isZone ? "Ищите по времени в пути" : "Сколько ехать до работы?"}</div>
-          <p class="commute-banner__desc">${
-            isZone
-              ? "Укажите, куда нужно ездить, — покажем квартиры, откуда вы доберётесь за нужное время"
-              : "Отметьте важные места — покажем время в пути до них от каждой квартиры"
-          }</p>
-        </div>
-        <button class="commute-banner__close" type="button" aria-label="Скрыть">${ICON_CLOSE}</button>
-      </div>
-      <button class="commute-banner__btn" type="button">${isZone ? "Указать адрес" : "Отметить места"}</button>
+      <button class="commute-banner__main" type="button">
+        <span class="commute-banner__icon">${commute.ICON_PLACES}</span>
+        <span class="commute-banner__text">
+          <span class="commute-banner__title">Сколько ехать до работы?</span>
+          <span class="commute-banner__desc">Отметьте места — покажем время в пути</span>
+        </span>
+      </button>
+      <button class="commute-banner__close" type="button" aria-label="Скрыть">${ICON_CLOSE}</button>
     `;
-    el.querySelector(".commute-banner__btn").addEventListener("click", () => {
+    el.querySelector(".commute-banner__main").addEventListener("click", () => {
       track("Плашка: нажал");
       openList("плашка");
     });
@@ -493,7 +486,7 @@
     return el;
   }
 
-  // Пустая выдача в зоне: подсказываем, сколько вариантов даст лимит побольше
+  // Пустая выдача из-за лимитов: предлагаем добавить время местам, где оно задано
   function renderZoneEmpty(container) {
     const places = commute.getPlaces();
     const el = document.createElement("div");
@@ -501,11 +494,11 @@
     el.innerHTML = `
       <div class="empty-state__title">Нет квартир, откуда можно доехать за это время</div>
       <p class="empty-state__hint">Увеличьте время в пути или выберите другой способ добраться</p>
-      <button class="commute-banner__btn" type="button">Добавить 15 мин к каждому адресу</button>
+      <button class="commute-banner__btn" type="button">Добавить 15 мин ко времени в пути</button>
     `;
     el.querySelector("button").addEventListener("click", () => {
       track("Пустая зона: +15 мин");
-      commute.setPlaces(places.map((p) => ({ ...p, limit: Math.min(p.limit + 15, 90) })));
+      commute.setPlaces(places.map((p) => (p.limit != null ? { ...p, limit: Math.min(p.limit + 15, 90) } : p)));
     });
     container.appendChild(el);
   }
@@ -518,5 +511,5 @@
   updateLabels();
 
   window.App = window.App || {};
-  Object.assign(window.App, { openCommuteDetails, commuteBannerEl, renderZoneEmpty, openCommuteList: openList });
+  Object.assign(window.App, { openCommuteDetails, commuteBannerEl, renderZoneEmpty, openCommuteList: openList, createCommuteSheet: createSheet });
 })();
