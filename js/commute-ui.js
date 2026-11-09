@@ -365,11 +365,9 @@
   // Это то, что в продукте жило бы в карточке объекта: все места × все способы добраться
   const details = createSheet("commute-details-sheet", "list");
   details.title.textContent = "Дорога до ваших мест";
-  let detailsItem = null;
 
   function openCommuteDetails(item) {
     track("Открыл время до мест", { item });
-    detailsItem = item;
     const blocks = commute
       .getPlaces()
       .map((p) => {
@@ -400,7 +398,6 @@
       <p class="commute-intro">${price} · ${item.address}</p>
       <div class="place-list">${blocks}</div>
       <p class="commute-note">Примерно, без учёта пробок в час пик</p>
-      <div data-role="road">${window.App.road.roadBlockHtml(item)}</div>
     `;
     details.footer.innerHTML = `
       <button class="btn-primary" type="button" data-role="done">Понятно</button>
@@ -414,16 +411,6 @@
       details.overlay.close();
       openList("из подробностей");
     } else if (e.target.closest('[data-role="done"]')) details.overlay.close();
-  });
-  // Вопросы продавцу о дороге — под временем до мест; пришёл ответ — перерисовываем блок
-  // (road-questions.js подключается после этого файла — привязываемся, когда всё загрузилось)
-  window.addEventListener("load", () => {
-    const { road } = window.App;
-    road.bindRoadBlock(details.body, () => detailsItem, "подробности времени");
-    road.onAnswer((item) => {
-      const slot = details.body.querySelector('[data-role="road"]');
-      if (slot && detailsItem && item.id === detailsItem.id) slot.innerHTML = road.roadBlockHtml(item);
-    });
   });
   details.closeBtn.addEventListener("click", details.overlay.close);
   details.backdrop.addEventListener("click", details.overlay.close);
