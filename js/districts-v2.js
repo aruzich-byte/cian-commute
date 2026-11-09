@@ -1,6 +1,6 @@
 (function () {
   // ---------- Районы, версия 2 — как в отелях Авиасейлс ----------
-  // Районы видно сразу, без приближения: цветные подписи на карте (тап — шторка района)
+  // Районы видно сразу, без приближения: еле заметные цветные зоны и подписи на карте (тап — шторка района)
   // и кнопка «Районы» справа сверху со списком всех районов и фильтром по группам.
   // Подписи не накладываются друг на друга: на каждом зуме показываем те, что помещаются.
   // Версия 1 — виджет при приближении (districts-ui.js); переключатель — в панели прототипа.
@@ -141,12 +141,44 @@
     map.setCenter(projection.fromGlobalPixels([x, y + dy], zoom), zoom, { duration: 300 });
   }
 
+  // ---------- Зоны районов на карте ----------
+  // Как у Авиасейлс: полупрозрачные цветные пятна районов, еле заметные под пинами.
+  // Контуры — настоящие границы муниципальных округов из OpenStreetMap, собранные в районы,
+  // вода не закрашена (см. districts-zones.js). Цвет — по группе района, как у подписи.
+  const ZONE_COLORS = {
+    center: "#e2572b",
+    old: "#c2378a",
+    green: "#2f9e4f",
+    new: "#7c4ddb",
+    panel: "#e0a100",
+    suburb: "#3d7cc9",
+  };
+  const ZONES = window.App.DISTRICT_ZONES || {};
+
   // ---------- Подписи районов на карте ----------
   let mapRef = null;
   let relayout = null;
 
   onMapReady((map) => {
     mapRef = map;
+    const zones = new ymaps.GeoObjectCollection();
+    DISTRICTS.forEach((d) => {
+      (ZONES[d.id] || []).forEach((contours) => {
+        zones.add(
+          new ymaps.Polygon(contours, {}, {
+            fillColor: ZONE_COLORS[d.group],
+            fillOpacity: 0.13,
+            strokeColor: "#ffffff",
+            strokeOpacity: 0.7,
+            strokeWidth: 1,
+            // Зоны не перехватывают тапы: карта двигается, пины и подписи нажимаются
+            interactivityModel: "default#transparent",
+            zIndex: 10,
+          })
+        );
+      });
+    });
+    map.geoObjects.add(zones);
     const labels = new ymaps.GeoObjectCollection();
     map.geoObjects.add(labels);
     const layout = ymaps.templateLayoutFactory.createClass(
@@ -164,6 +196,7 @@
       if (zoom === shownZoom && labels.getLength()) return;
       shownZoom = zoom;
       labels.removeAll();
+      zones.options.set("visible", labelsOn && zoom >= LABELS_MIN_ZOOM);
       if (!labelsOn || zoom < LABELS_MIN_ZOOM) return;
       const projection = map.options.get("projection");
       const placed = [];
